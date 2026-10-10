@@ -1,34 +1,47 @@
 /**
- * Property-Based Tests for Focus Timer Component - Task 4.2
+ * Property-Based Tests for Focus Timer Component - Task 4.4
  * Tests timer control methods and state transitions
  * Uses: fast-check library for property-based testing
  * Validates: Requirements 3.2, 4.1, 4.2, 4.3, 4.4, 4.5
  */
 
-describe('FocusTimer Property-Based Tests - Task 4.2', () => {
+const fs = require('fs');
+const path = require('path');
+const fc = require('fast-check');
+
+describe('FocusTimer Property-Based Tests - Task 4.4', () => {
+    let App;
     let timerDisplay;
 
+    beforeAll(() => {
+        // Load the actual browser application without changing its public API.
+        const source = fs.readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
+        App = new Function(source + '\nreturn App;')();
+    });
+
+    function initializeTimer() {
+        // Each generated example must release the previous example's interval.
+        App.FocusTimer.destroy();
+        App.FocusTimer.init();
+    }
+
     beforeEach(() => {
+        jest.useFakeTimers();
         // Set up DOM elements required by FocusTimer
         document.body.innerHTML = `
             <div id="timer-display">25:00</div>
+            <div id="timer-notification-fallback" style="display: none"></div>
         `;
         timerDisplay = document.getElementById('timer-display');
 
         // Initialize the FocusTimer module
-        if (typeof App !== 'undefined' && App.FocusTimer) {
-            App.FocusTimer.init();
-        }
-
-        // Use fake timers to control setInterval
-        jest.useFakeTimers();
+        initializeTimer();
     });
 
     afterEach(() => {
         // Clean up
-        if (typeof App !== 'undefined' && App.FocusTimer) {
-            App.FocusTimer.destroy();
-        }
+        App.FocusTimer.destroy();
+        expect(jest.getTimerCount()).toBe(0);
         document.body.innerHTML = '';
         
         // Restore real timers
@@ -43,16 +56,16 @@ describe('FocusTimer Property-Based Tests - Task 4.2', () => {
          * **Validates: Requirements 3.3**
          */
         test('formatTime() always returns MM:SS format for valid seconds (0-1500)', () => {
-            const fc = require('fast-check');
-
+            // Feature: todo-list-life-dashboard, Property 4: Timer Display Formatting
             fc.assert(
                 fc.property(
                     fc.integer({ min: 0, max: 1500 }),
                     (seconds) => {
                         const formatted = App.FocusTimer.formatTime(seconds);
                         // Pattern: MM:SS where MM is 00-25 and SS is 00-59
-                        const pattern = /^([0-2][0-5]|00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25):[0-5][0-9]$/;
-                        return pattern.test(formatted);
+                        expect(formatted).toMatch(/^(?:[01][0-9]|2[0-5]):[0-5][0-9]$/);
+                        const [minutes, remainder] = formatted.split(':').map(Number);
+                        expect(minutes * 60 + remainder).toBe(seconds);
                     }
                 ),
                 { numRuns: 100 }
@@ -133,33 +146,37 @@ describe('FocusTimer Property-Based Tests - Task 4.2', () => {
         });
 
         test('state transitions are atomic and consistent', () => {
-            const fc = require('fast-check');
-
-            // Generate random sequence of start/stop calls
+            // Feature: todo-list-life-dashboard, Property 5: Timer State Transitions
             fc.assert(
                 fc.property(
                     fc.array(
-                        fc.oneof(
-                            fc.constant('start'),
-                            fc.constant('stop'),
-                            fc.constant('reset')
-                        ),
+                        fc.record({
+                            action: fc.constantFrom('start', 'stop', 'reset'),
+                            seconds: fc.integer({ min: 1, max: 60 })
+                        }),
                         { minLength: 1, maxLength: 20 }
                     ),
                     (actions) => {
-                        App.FocusTimer.init();
+                        initializeTimer();
+                        let remaining = 1500;
+                        let running = false;
                         
-                        actions.forEach(action => {
-                            if (action === 'start') App.FocusTimer.start();
-                            else if (action === 'stop') App.FocusTimer.stop();
-                            else if (action === 'reset') App.FocusTimer.reset();
-                            
-                            jest.advanceTimersByTime(100); // Small advance
+                        actions.forEach(({ action, seconds }) => {
+                            App.FocusTimer[action]();
+                            if (action === 'start') running = true;
+                            else if (action === 'stop') running = false;
+                            else {
+                                remaining = 1500;
+                                running = false;
+                            }
+
+                            jest.advanceTimersByTime(seconds * 1000);
+                            if (running) remaining -= seconds;
+                            expect(App.FocusTimer.getRemainingTime()).toBe(remaining);
+                            expect(jest.getTimerCount()).toBe(running ? 1 : 0);
+                            const [minutes, remainder] = timerDisplay.textContent.split(':').map(Number);
+                            expect(minutes * 60 + remainder).toBe(remaining);
                         });
-                        
-                        // After any sequence, remaining time should be between 0 and 1500
-                        const remaining = App.FocusTimer.getRemainingTime();
-                        return remaining >= 0 && remaining <= 1500;
                     }
                 ),
                 { numRuns: 100 }
@@ -175,27 +192,30 @@ describe('FocusTimer Property-Based Tests - Task 4.2', () => {
          * **Validates: Requirements 4.4, 4.5**
          */
         test('reset() from any state returns to 1500 seconds', () => {
-            const fc = require('fast-check');
-
-            // Test resetting at various time points
+            // Feature: todo-list-life-dashboard, Property 6: Timer Reset
             fc.assert(
                 fc.property(
                     fc.integer({ min: 0, max: 1500 }),
-                    (timeElapsed) => {
-                        App.FocusTimer.init();
-                        App.FocusTimer.start();
-                        
-                        // Advance to some point
-                        jest.advanceTimersByTime(timeElapsed * 1000);
+                    fc.constantFrom('stopped', 'running', 'paused'),
+                    (timeElapsed, state) => {
+                        initializeTimer();
+                        if (state !== 'stopped') {
+                            App.FocusTimer.start();
+                            jest.advanceTimersByTime(timeElapsed * 1000);
+                            if (state === 'paused') App.FocusTimer.stop();
+                        }
                         
                         // Reset
                         App.FocusTimer.reset();
                         
-                        // Should be back to 1500
-                        return App.FocusTimer.getRemainingTime() === 1500;
+                        expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+                        expect(timerDisplay.textContent).toBe('25:00');
+                        expect(jest.getTimerCount()).toBe(0);
+                        jest.advanceTimersByTime(5000);
+                        expect(App.FocusTimer.getRemainingTime()).toBe(1500);
                     }
                 ),
-                { numRuns: 50 }
+                { numRuns: 100 }
             );
         });
 
@@ -311,13 +331,12 @@ describe('FocusTimer Property-Based Tests - Task 4.2', () => {
          * Test that countdown accurately decrements by exactly 1 second per interval
          */
         test('timer decrements exactly 1 second per 1000ms interval', () => {
-            const fc = require('fast-check');
-
+            // Feature: todo-list-life-dashboard, Property 5: Timer State Transitions
             fc.assert(
                 fc.property(
                     fc.integer({ min: 1, max: 100 }),
                     (iterations) => {
-                        App.FocusTimer.init();
+                        initializeTimer();
                         App.FocusTimer.start();
                         
                         const initialTime = App.FocusTimer.getRemainingTime();
@@ -330,7 +349,7 @@ describe('FocusTimer Property-Based Tests - Task 4.2', () => {
                         return finalTime === initialTime - iterations;
                     }
                 ),
-                { numRuns: 50 }
+                { numRuns: 100 }
             );
         });
 

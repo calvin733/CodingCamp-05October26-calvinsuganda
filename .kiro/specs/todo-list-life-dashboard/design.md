@@ -82,6 +82,9 @@ The Storage module provides a centralized abstraction over Local Storage with th
 - `dashboard_tasks`: Array of task objects
 - `dashboard_links`: Array of link objects
 - `dashboard_timer_state`: Timer state (for future persistence if needed)
+- `dashboard_name`: Validated display name (string)
+- `dashboard_focus_minutes`: Selected focus duration (integer, 1–180)
+- `dashboard_theme`: Selected appearance (`light` or `dark`)
 
 ## Components and Interfaces
 
@@ -668,13 +671,13 @@ Reviewing all identified properties to eliminate redundancy:
 
 ### Property 6: Timer Reset
 
-*For any* timer state (stopped, running, or paused) with any remaining time value, calling reset() SHALL set remainingSeconds to 1500 and state to stopped.
+*For any* timer state (stopped, running, or paused) with any remaining time value, calling reset() SHALL set remainingSeconds to the selected duration in seconds (1500 by default) and state to stopped.
 
 **Validates: Requirements 4.4, 4.5**
 
 ### Property 7: Task Creation
 
-*For any* non-empty string (after trimming), creating a task SHALL produce a Task object where text equals the input string, completed equals false, id is unique, and createdAt is a valid timestamp.
+*For any* non-empty, non-duplicate string (after trimming), creating a task SHALL produce a Task object where text equals the input string, completed equals false, id is unique, and createdAt is a valid timestamp.
 
 **Validates: Requirements 5.1, 5.5**
 
@@ -1188,4 +1191,50 @@ Key architectural decisions include:
 - Event-driven communication between components
 - Property-based testing for comprehensive correctness validation
 
-The design addresses all 17 requirements with specific implementation strategies, correctness properties for testable behaviors, and clear testing approaches for validation.
+The base design addresses requirements 1–17. The extension below adds requirements 18–21 while preserving the existing architecture.
+
+## Dashboard Challenges Extension (Requirements 18–21)
+
+This extension preserves the existing HTML sections, single stylesheet, single production script, IIFE modules, Storage abstraction, and delegated task events. It supersedes the fixed 25-minute initialization/reset descriptions above when a custom duration is saved. No timer running state is persisted.
+
+### Preferences and Greeting
+
+- Store JSON values through Storage: `dashboard_name` (trimmed string, 1–80 characters, or empty for default), `dashboard_focus_minutes` (integer, 1–180), and `dashboard_theme` (`light` or `dark`). Storage.clear removes these application keys while preserving unrelated origin data.
+- GreetingDisplay loads a validated name during init, exposes `saveName(name)` and `clearName()`, and uses `textContent` for the personalized display. Keep `getGreeting()` as the existing pure time-of-day mapping so clock/date behavior remains unchanged.
+- A name form (`#name-form`, `#name-input`) supports submission by button or Enter and shows inline feedback in `#name-validation`. Empty saves retain the previous name; the explicit default-greeting control clears it.
+
+### Configurable Timer
+
+- FocusTimer owns `focusMinutes`, default 25, and exposes `setDuration(minutes)` and `getDuration()` in addition to its existing API.
+- `#duration-form` contains `#focus-duration` (number input, min 1, max 180, step 1), an Apply button, an inline validation message, and text explaining that Apply stops and resets the current session.
+- Validation occurs before any mutation. Successful Apply saves minutes, calls the existing reset cleanup, and synchronizes the input/display. Reset uses `focusMinutes * 60`; init validates storage and starts stopped. Interval guards and asynchronous notification session cancellation remain in use.
+- Native/fallback completion text uses the current duration rather than a hard-coded 25. Invalid stored types/values fall back safely. Applying during running, paused, or completed states always returns to stopped.
+
+### Theme
+
+- Add a ThemeManager IIFE in `js/app.js` with init/toggle, storing the selected theme through Storage. Initialize it before other UI modules.
+- Set `data-theme` on the document element and update `#theme-toggle` text plus `aria-pressed` to indicate whether dark mode is active.
+- Replace repeated palette colors with CSS custom properties in `css/style.css`. The light palette retains the current appearance; the dark palette covers cards, form surfaces, secondary buttons, borders, readable blue accents, completed text, alerts, and running-timer feedback. Set `color-scheme` for native controls.
+- Use brief color/background/border transitions; preserve the existing 50 ms button feedback and disable transitions under prefers-reduced-motion. Forms wrap/stack within the existing 800 px layout and maintain 44 px hit areas.
+
+### Task Uniqueness
+
+- Normalize the candidate with the existing trim/500-character bound, then compare `text.trim().toLowerCase()` with every task already loaded by TodoManager. Include completed tasks; exclude the current ID for an edit.
+- Validate before generating IDs, writing storage, or rendering. Duplicates return false, retain edit/input state, and show the shared `#todo-validation` live message with an accessible invalid-input state. Clear feedback on typing, successful operations, and edit cancellation.
+- Do not migrate or remove legacy duplicates. Check the actual loaded collection so duplicate validation works after a reload and when storage writes are unavailable.
+
+### Additional Verification
+
+- Test valid/invalid preferences, restoration, default values, safe name rendering, storage errors, and one-handler initialization using the actual app.
+- Test timer Apply during running/paused/completed states, interval counts, reset to custom duration, invalid input preserving state, and cancellation of stale completion notifications.
+- Adapt the task-growth property to count only accepted unique tasks; add at least 100 generated cases for duplicate normalization and custom-duration state transitions.
+- Browser checks cover all four features with actual reloads, both themes at desktop/mobile widths, contrast including opacity, focus and reduced motion, and serving assets beneath the repository path used by GitHub Pages.
+- Keep tasks 16/17 pending until native Safari is verified on macOS. Verify the existing Pages deployment source before claiming that merging deploys; do not change the repository name or Pages URL.
+
+### Property 17: Duplicate Normalization
+
+For any task name, adding a case-insensitive equivalent with leading/trailing whitespace SHALL be rejected without changing the task collection or stored data, including after loading completed tasks. **Validates: Requirements 21.1, 21.2, 21.4.**
+
+### Property 18: Custom Duration Transitions
+
+For any valid focus duration from 1–180 minutes, Start SHALL run a single countdown, Pause SHALL preserve remaining time, and Reset SHALL stop and restore that duration multiplied by 60. **Validates: Requirements 19.2, 19.4, 19.5.**

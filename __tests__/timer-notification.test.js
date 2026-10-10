@@ -1,202 +1,176 @@
-/**
- * Test Suite: Timer Completion Notification
- * Tests the timer completion notification functionality including:
- * - Notification API detection
- * - Permission handling
- * - Visual fallback display
- * - Notification triggering on timer completion
+/** Timer completion checks for checkpoint 5.
+ * Validates: Requirements 3.4, 3.5, 4.4 and 4.5.
  */
+const fs = require('fs');
+const path = require('path');
+const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 
-describe('Focus Timer - Notification Tests', function() {
-    let App;
+describe('Focus Timer - Notification Tests', () => {
     let originalNotification;
-    let notificationCreated = false;
-    let lastNotificationOptions = null;
 
-    beforeEach(function() {
-        // Load the app (in browser environment)
-        // For Node.js testing, we'll need to mock the DOM
-        
-        // Store original Notification to restore later
-        originalNotification = window.Notification;
-        notificationCreated = false;
-        lastNotificationOptions = null;
+    beforeEach(() => {
+        document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+        originalNotification = Object.getOwnPropertyDescriptor(window, 'Notification');
+        delete window.Notification;
+        App.FocusTimer.init();
     });
 
-    afterEach(function() {
-        // Restore original Notification
+    afterEach(() => {
         if (originalNotification) {
-            window.Notification = originalNotification;
+            Object.defineProperty(window, 'Notification', originalNotification);
         } else {
             delete window.Notification;
         }
-        
-        // Clean up
-        if (App && App.FocusTimer && App.FocusTimer.destroy) {
-            App.FocusTimer.destroy();
-        }
     });
 
-    describe('checkNotificationSupport()', function() {
-        it('should return true when Notification API is available', function() {
-            // Mock Notification API
-            window.Notification = function() {
-                notificationCreated = true;
-            };
-            window.Notification.permission = 'default';
-            
-            // In browser environment, this would test the actual implementation
-            // For now, we document the expected behavior
-            expect(typeof window.Notification).toBe('function');
-        });
+    function mockNotification(permission) {
+        const notification = jest.fn();
+        notification.permission = permission;
+        notification.requestPermission = jest.fn().mockResolvedValue('granted');
+        window.Notification = notification;
+        return notification;
+    }
 
-        it('should return false when Notification API is not available', function() {
-            // Remove Notification API
-            delete window.Notification;
-            
-            // Verify it's unavailable
-            expect('Notification' in window).toBe(false);
-        });
+    function completeTimer() {
+        App.FocusTimer.start();
+        jest.advanceTimersByTime(1500 * 1000);
+        expect(App.FocusTimer.getRemainingTime()).toBe(0);
+        expect(document.getElementById('timer-display').textContent).toBe('00:00');
+    }
+
+    test('detects the presence and absence of Notification API', () => {
+        expect(App.FocusTimer.checkNotificationSupport()).toBe(false);
+        mockNotification('default');
+        expect(App.FocusTimer.checkNotificationSupport()).toBe(true);
     });
 
-    describe('Notification Permission States', function() {
-        it('should handle permission granted state', function() {
-            // Mock Notification with granted permission
-            window.Notification = function(title, options) {
-                notificationCreated = true;
-                lastNotificationOptions = options;
-            };
-            window.Notification.permission = 'granted';
-            
-            expect(window.Notification.permission).toBe('granted');
-        });
-
-        it('should handle permission denied state', function() {
-            // Mock Notification with denied permission
-            window.Notification = function(title, options) {
-                notificationCreated = true;
-            };
-            window.Notification.permission = 'denied';
-            
-            expect(window.Notification.permission).toBe('denied');
-        });
-
-        it('should handle permission default state', function() {
-            // Mock Notification with default permission
-            window.Notification = function(title, options) {
-                notificationCreated = true;
-            };
-            window.Notification.permission = 'default';
-            
-            expect(window.Notification.permission).toBe('default');
-        });
+    test('the actual page has a hidden fallback with completion content', () => {
+        const fallback = document.getElementById('timer-notification-fallback');
+        expect(fallback.style.display).toBe('none');
+        expect(fallback.querySelector('h3').textContent).toBe('Focus Session Complete!');
+        expect(fallback.querySelector('p').textContent).toContain('25-minute');
     });
 
-    describe('Visual Fallback Notification', function() {
-        it('should have fallback notification element in DOM', function() {
-            const fallbackElement = document.getElementById('timer-notification-fallback');
-            expect(fallbackElement).not.toBeNull();
-        });
-
-        it('should have fallback element hidden by default', function() {
-            const fallbackElement = document.getElementById('timer-notification-fallback');
-            expect(fallbackElement.style.display).toBe('none');
-        });
-
-        it('should have proper notification content structure', function() {
-            const fallbackElement = document.getElementById('timer-notification-fallback');
-            const contentDiv = fallbackElement.querySelector('.notification-content');
-            const heading = contentDiv.querySelector('h3');
-            const message = contentDiv.querySelector('p');
-            
-            expect(contentDiv).not.toBeNull();
-            expect(heading).not.toBeNull();
-            expect(message).not.toBeNull();
-            expect(heading.textContent).toBe('Focus Session Complete!');
-            expect(message.textContent).toContain('25-minute');
-        });
+    test.each(['granted', 'denied'])('reuses %s permission without another prompt', async permission => {
+        const notification = mockNotification(permission);
+        await expect(App.FocusTimer.requestNotificationPermission()).resolves.toBe(permission);
+        expect(notification.requestPermission).not.toHaveBeenCalled();
     });
 
-    describe('Timer Completion Notification Triggering', function() {
-        it('should show notification when timer reaches 00:00', function() {
-            // This test would need to:
-            // 1. Start the timer with a small interval (not 1 second for speed)
-            // 2. Wait for it to count down
-            // 3. Verify notification was triggered
-            // 
-            // In a real test environment with fast-check, we'd use property testing
-            // to verify this works across different scenarios
-            
-            expect(true).toBe(true); // Placeholder - actual test in integration tests
-        });
-
-        it('should not show notification multiple times for same completion', function() {
-            // The timer should only notify once per completion cycle
-            // Multiple calls to start after completion shouldn't trigger more notifications
-            
-            expect(true).toBe(true); // Placeholder - actual test in integration tests
-        });
-
-        it('should use fallback when notifications unavailable', function() {
-            // Remove Notification API
-            delete window.Notification;
-            
-            // Timer should show fallback visual indicator
-            expect('Notification' in window).toBe(false);
-        });
-
-        it('should use fallback when permission denied', function() {
-            // Mock Notification with denied permission
-            window.Notification = function(title, options) {
-                notificationCreated = true;
-            };
-            window.Notification.permission = 'denied';
-            
-            // Timer should show fallback visual indicator instead of native notification
-            expect(window.Notification.permission).toBe('denied');
-        });
+    test('permission checks report unsupported browsers', async () => {
+        await expect(App.FocusTimer.requestNotificationPermission()).resolves.toBe('unsupported');
     });
 
-    describe('Notification Properties', function() {
-        it('should use correct title in notification', function() {
-            window.Notification = function(title, options) {
-                expect(title).toBe('Focus Session Complete!');
-            };
-            window.Notification.permission = 'granted';
+    test('completion sends the specified native notification', () => {
+        const notification = mockNotification('granted');
+        completeTimer();
+        expect(notification).toHaveBeenCalledTimes(1);
+        expect(notification).toHaveBeenCalledWith('Focus Session Complete!', {
+            body: 'Your 25-minute focus session is complete.',
+            tag: 'focus-timer-completion',
+            requireInteraction: false
         });
-
-        it('should include descriptive body in notification', function() {
-            window.Notification = function(title, options) {
-                expect(options.body).toContain('25-minute');
-                expect(options.body).toContain('complete');
-            };
-            window.Notification.permission = 'granted';
-        });
-
-        it('should set tag to prevent duplicate notifications', function() {
-            window.Notification = function(title, options) {
-                expect(options.tag).toBe('focus-timer-completion');
-            };
-            window.Notification.permission = 'granted';
-        });
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('none');
+        expect(jest.getTimerCount()).toBe(0);
     });
 
-    describe('Reset Behavior', function() {
-        it('should hide fallback notification when reset is called', function() {
-            const fallbackElement = document.getElementById('timer-notification-fallback');
-            fallbackElement.style.display = 'block'; // Show it first
-            
-            // In real test, call App.FocusTimer.reset()
-            // For now, verify element is present
-            expect(fallbackElement).not.toBeNull();
-        });
+    test('starting a completed timer does not notify again before reset', () => {
+        const notification = mockNotification('granted');
+        completeTimer();
+        App.FocusTimer.start();
+        App.FocusTimer.start();
+        jest.advanceTimersByTime(10000);
+        expect(notification).toHaveBeenCalledTimes(1);
+        expect(App.FocusTimer.getRemainingTime()).toBe(0);
+        expect(jest.getTimerCount()).toBe(0);
+    });
 
-        it('should reset notification flag when starting new session', function() {
-            // The hasNotified flag should be reset when start() is called
-            // This ensures the next completion will trigger notification again
-            
-            expect(true).toBe(true); // Placeholder - actual test verifies this
+    test.each(['unsupported', 'denied'])('completion uses visual fallback when %s', permission => {
+        const notification = permission === 'denied' ? mockNotification('denied') : null;
+        completeTimer();
+        const fallback = document.getElementById('timer-notification-fallback');
+        expect(fallback.style.display).toBe('block');
+        if (notification) expect(notification).not.toHaveBeenCalled();
+        jest.advanceTimersByTime(5000);
+        expect(fallback.style.display).toBe('none');
+        expect(App.FocusTimer.getRemainingTime()).toBe(0);
+        expect(jest.getTimerCount()).toBe(0);
+    });
+
+    test.each(['granted', 'denied', 'default'])('handles an initial permission response of %s', async response => {
+        const notification = mockNotification('default');
+        notification.requestPermission.mockImplementation(async () => {
+            // Browsers update permission when resolving the prompt.
+            notification.permission = response;
+            return response;
         });
+        completeTimer();
+        await jest.advanceTimersByTimeAsync(0);
+        expect(notification.requestPermission).toHaveBeenCalledTimes(1);
+        expect(notification).toHaveBeenCalledTimes(response === 'granted' ? 1 : 0);
+        expect(document.getElementById('timer-notification-fallback').style.display)
+            .toBe(response === 'granted' ? 'none' : 'block');
+    });
+
+    test('falls back if native notification construction fails', () => {
+        const notification = mockNotification('granted');
+        notification.mockImplementation(() => { throw new Error('Unavailable'); });
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+        completeTimer();
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('block');
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    test('reset hides the visual fallback and restores 25:00', () => {
+        completeTimer();
+        App.FocusTimer.reset();
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('none');
+        expect(document.getElementById('timer-display').textContent).toBe('25:00');
+        jest.advanceTimersByTime(10000);
+        expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+    });
+
+    test('a new session can notify again after reset', () => {
+        const notification = mockNotification('granted');
+        completeTimer();
+        App.FocusTimer.reset();
+        completeTimer();
+        expect(notification).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(['reject', 'throw'])('a permission prompt that can %s falls back safely', async failure => {
+        const notification = mockNotification('default');
+        notification.requestPermission.mockImplementation(() => {
+            if (failure === 'throw') throw new Error('Blocked prompt');
+            return Promise.reject(new Error('Blocked prompt'));
+        });
+        completeTimer();
+        await jest.advanceTimersByTimeAsync(0);
+        expect(notification).not.toHaveBeenCalled();
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('block');
+    });
+
+    test('a permission prompt resolving after reset cannot notify the next session', async () => {
+        const notification = mockNotification('default');
+        let resolvePermission;
+        notification.requestPermission.mockReturnValue(new Promise(resolve => { resolvePermission = resolve; }));
+        completeTimer();
+        App.FocusTimer.reset();
+        notification.permission = 'granted';
+        resolvePermission('granted');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(notification).not.toHaveBeenCalled();
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('none');
+    });
+
+    test('reset and destroy cancel fallback cleanup timers', () => {
+        completeTimer();
+        expect(jest.getTimerCount()).toBe(1);
+        App.FocusTimer.reset();
+        expect(jest.getTimerCount()).toBe(0);
+        App.FocusTimer.showNotification();
+        expect(jest.getTimerCount()).toBe(1);
+        App.FocusTimer.destroy();
+        expect(jest.getTimerCount()).toBe(0);
     });
 });
-

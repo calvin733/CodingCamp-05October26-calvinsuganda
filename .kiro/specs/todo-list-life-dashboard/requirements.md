@@ -8,7 +8,7 @@ The Todo List Life Dashboard is a client-side web application that helps users m
 
 - **Dashboard**: The main web application interface containing all features
 - **Greeting_Display**: Component showing current time, date, and time-based greeting
-- **Focus_Timer**: A 25-minute countdown timer component
+- **Focus_Timer**: A configurable countdown timer component, defaulting to 25 minutes
 - **Todo_Manager**: Component managing task creation, editing, completion, and deletion
 - **Task**: An individual to-do item with text content and completion status
 - **Quick_Links_Manager**: Component managing user's favorite website shortcuts
@@ -46,7 +46,7 @@ The Todo List Life Dashboard is a client-side web application that helps users m
 
 #### Acceptance Criteria
 
-1. THE Focus_Timer SHALL initialize with 25 minutes (1500 seconds)
+1. THE Focus_Timer SHALL initialize with the saved focus duration, or 25 minutes (1500 seconds) when no valid duration is saved
 2. WHEN the timer is running, THE Focus_Timer SHALL decrement by one second every second
 3. THE Focus_Timer SHALL display the remaining time in MM:SS format
 4. WHEN the timer reaches 00:00, THE Focus_Timer SHALL stop counting
@@ -61,8 +61,8 @@ The Todo List Life Dashboard is a client-side web application that helps users m
 1. WHEN the user activates the start button, THE Focus_Timer SHALL begin counting down
 2. WHEN the user activates the stop button WHILE the timer is running, THE Focus_Timer SHALL pause at the current time
 3. WHEN the user activates the start button WHILE the timer is paused, THE Focus_Timer SHALL resume counting down from the paused time
-4. WHEN the user activates the reset button, THE Focus_Timer SHALL return to 25 minutes (1500 seconds)
-5. WHEN the user activates the reset button WHILE the timer is running, THE Focus_Timer SHALL stop and return to 25 minutes
+4. WHEN the user activates the reset button, THE Focus_Timer SHALL return to the selected focus duration (25 minutes by default)
+5. WHEN the user activates the reset button WHILE the timer is running, THE Focus_Timer SHALL stop and return to the selected focus duration
 
 ### Requirement 5: Add Tasks to To-Do List
 
@@ -70,7 +70,7 @@ The Todo List Life Dashboard is a client-side web application that helps users m
 
 #### Acceptance Criteria
 
-1. WHEN the user provides task text and activates the add button, THE Todo_Manager SHALL create a new Task with the provided text
+1. WHEN the user provides valid, non-duplicate task text and activates the add button, THE Todo_Manager SHALL create a new Task with the provided text
 2. WHEN the user provides task text and activates the add button, THE Todo_Manager SHALL display the new Task in the to-do list
 3. WHEN the user provides task text and activates the add button, THE Todo_Manager SHALL save the new Task to Local_Storage
 4. IF the user provides empty task text, THEN THE Todo_Manager SHALL not create a new Task
@@ -206,3 +206,52 @@ The Todo List Life Dashboard is a client-side web application that helps users m
 3. THE Dashboard SHALL function correctly in Microsoft Edge version 90 or later
 4. THE Dashboard SHALL function correctly in Safari version 14 or later
 5. THE Dashboard SHALL not require any browser extensions to function as a web application
+
+### Requirement 18: Custom Name in Greeting
+
+**User Story:** As a user, I want to save and change my name, so that the dashboard greets me personally.
+
+#### Acceptance Criteria
+
+1. THE Greeting_Display SHALL provide a labeled name input, Save Name control, and a control to return to the default greeting
+2. WHEN a trimmed name of 1–80 characters is saved, THE Greeting_Display SHALL immediately append that name to the time-based greeting, such as "Good Morning, Calvin!"
+3. THE Dashboard SHALL persist the name in Local_Storage and restore it after refreshing
+4. IF the name is empty, whitespace-only, or longer than 80 characters, THEN the Dashboard SHALL show a validation message without changing the saved name
+5. IF no valid name is saved, THEN the Greeting_Display SHALL retain the existing time-based default greeting; names SHALL be rendered as text
+
+### Requirement 19: Custom Pomodoro Duration
+
+**User Story:** As a user, I want to choose my focus duration, so that sessions fit my schedule.
+
+#### Acceptance Criteria
+
+1. THE Focus_Timer SHALL provide a labeled minutes input and an Apply control, accepting only whole numbers from 1 through 180
+2. WHEN a valid duration is applied, THE Focus_Timer SHALL save it in Local_Storage, stop the active interval, and reset the countdown to the new duration
+3. IF a duration is invalid, THEN the Focus_Timer SHALL show a clear validation message and preserve its duration, remaining time, running state, and saved value
+4. Start SHALL begin/resume, Pause SHALL stop at the current time, and Reset SHALL stop and restore the selected duration; at most one countdown interval SHALL run
+5. Refreshing SHALL restore the selected duration with the timer stopped; corrupt or invalid saved values SHALL fall back to 25 minutes
+6. Completion notifications and their visual fallback SHALL describe the selected duration; changing duration SHALL invalidate pending notifications from the previous session
+
+### Requirement 20: Light and Dark Mode
+
+**User Story:** As a user, I want a readable light or dark dashboard, so that I can choose my preferred appearance.
+
+#### Acceptance Criteria
+
+1. THE Dashboard SHALL provide a keyboard-accessible Light/Dark toggle with an accessible state
+2. THE selected theme SHALL apply to page backgrounds, cards, text, buttons, inputs, timer feedback, validation, and storage/notification messages with readable contrast
+3. THE Dashboard SHALL save the theme in Local_Storage and restore it on refresh; absent or invalid values SHALL default to light
+4. Theme changes SHALL use short color transitions and respect reduced-motion preferences without adding decorative animations
+5. Theme and other preferences SHALL remain usable in memory if storage is unavailable, using the existing storage warning
+
+### Requirement 21: Prevent Duplicate Tasks
+
+**User Story:** As a user, I want duplicate task names rejected, so that my task list stays clear.
+
+#### Acceptance Criteria
+
+1. WHEN adding a task, THE Todo_Manager SHALL compare the trimmed task text against existing saved tasks using case-insensitive comparison, regardless of completion status
+2. IF a duplicate is found, THEN the Dashboard SHALL show "A task with this name already exists." and preserve the input, task collection, and saved data
+3. The same validation SHALL prevent edits from duplicating another task, while allowing a task to retain its own name
+4. Existing stored tasks SHALL remain intact, including any legacy duplicates; newly added/edited tasks SHALL be validated against them
+5. Validation feedback SHALL clear on correction or cancellation; existing editing, completion, deletion, and persistence SHALL keep working

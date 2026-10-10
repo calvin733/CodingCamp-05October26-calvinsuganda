@@ -54,7 +54,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - **Property 3: Time-Based Greeting**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
 
-- [ ] 4. Implement Focus Timer Component
+- [x] 4. Implement Focus Timer Component
   - [x] 4.1 Create FocusTimer module with state management
     - Implement timer state (remainingSeconds, isRunning, timerInterval)
     - Implement `init()` to initialize with 1500 seconds (25 minutes)
@@ -80,7 +80,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Implement `destroy()` to clean up intervals
     - _Requirements: 3.4, 3.5_
 
-  - [-] 4.4 Write property tests for Focus Timer
+  - [x] 4.4 Write property tests for Focus Timer
     - **Property 4: Timer Display Formatting**
     - **Validates: Requirements 3.3**
     - **Property 5: Timer State Transitions**
@@ -88,11 +88,11 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - **Property 6: Timer Reset**
     - **Validates: Requirements 4.4, 4.5**
 
-- [~] 5. Checkpoint - Verify core modules
+- [x] 5. Checkpoint - Verify core modules
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement Todo Manager Component - Core Structure
-  - [ ] 6.1 Create TodoManager module with task data model
+- [x] 6. Implement Todo Manager Component - Core Structure
+  - [x] 6.1 Create TodoManager module with task data model
     - Define Task model structure: `{ id, text, completed, createdAt }`
     - Implement internal state: tasks array and editingId
     - Implement `init()` to load tasks from Local Storage via Storage.get()
@@ -100,7 +100,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Generate unique IDs using timestamp + random string
     - _Requirements: 5.5, 9.1, 9.4_
 
-  - [~] 6.2 Implement task creation functionality
+  - [x] 6.2 Implement task creation functionality
     - Implement `addTask(text)` method
     - Validate text is non-empty after trim (reject whitespace-only input)
     - Create task object with completed=false and current timestamp
@@ -110,7 +110,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Clear input field and focus it after adding
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [~] 6.3 Write property tests for task creation
+  - [x] 6.3 Write property tests for task creation
     - **Property 7: Task Creation**
     - **Validates: Requirements 5.1, 5.5**
     - **Property 8: Task List Growth Invariant (add part)**
@@ -118,8 +118,8 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - **Property 9: Task Input Validation**
     - **Validates: Requirements 5.4, 6.4**
 
-- [ ] 7. Implement Todo Manager - Edit and Complete
-  - [~] 7.1 Implement task editing functionality
+- [x] 7. Implement Todo Manager - Edit and Complete
+  - [x] 7.1 Implement task editing functionality
     - Implement `editTask(id, newText)` method
     - Find task by ID in tasks array
     - Validate new text is non-empty (retain original if empty)
@@ -129,7 +129,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Handle edit cancellation (retain original text)
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [~] 7.2 Implement task completion toggle
+  - [x] 7.2 Implement task completion toggle
     - Implement `toggleComplete(id)` method
     - Find task by ID in tasks array
     - Flip completed boolean value
@@ -137,14 +137,14 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Update visual styling (strikethrough, opacity) without full re-render
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [~] 7.3 Write property tests for task operations
+  - [x] 7.3 Write property tests for task operations
     - **Property 11: Task Edit Preserves Identity**
     - **Validates: Requirements 6.2**
     - **Property 12: Task Completion Toggle**
     - **Validates: Requirements 7.1, 7.3**
 
-- [ ] 8. Implement Todo Manager - Delete and Rendering
-  - [~] 8.1 Implement task deletion
+- [x] 8. Implement Todo Manager - Delete and Rendering
+  - [x] 8.1 Implement task deletion
     - Implement `deleteTask(id)` method
     - Remove task from tasks array by ID using filter
     - Save updated array to Local Storage
@@ -152,7 +152,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Ensure display updates within 100ms
     - _Requirements: 8.1, 8.2, 8.3_
 
-  - [~] 8.2 Implement task list rendering
+  - [x] 8.2 Implement task list rendering
     - Implement `renderTasks()` method
     - Generate HTML for each task with checkbox, text, edit, and delete buttons
     - Apply visual styling based on completion status
@@ -161,12 +161,12 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Use data-id attributes for task identification
     - _Requirements: 5.2, 6.1, 7.2, 9.2_
 
-  - [~] 8.3 Write property test for task deletion
+  - [x] 8.3 Write property test for task deletion
     - **Property 8: Task List Growth Invariant (delete part)**
     - **Validates: Requirements 8.1**
 
-- [ ] 9. Implement Quick Links Manager Component
-  - [~] 9.1 Create QuickLinksManager module with link data model
+- [x] 9. Implement Quick Links Manager Component
+  - [x] 9.1 Create QuickLinksManager module with link data model
     - Define Link model structure: `{ id, name, url, createdAt }`
     - Implement internal state: links array
     - Implement `init()` to load links from Local Storage
@@ -174,7 +174,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Generate unique IDs using timestamp + random string
     - _Requirements: 10.1, 13.1, 13.4_
 
-  - [~] 9.2 Implement link creation functionality
+  - [x] 9.2 Implement link creation functionality
     - Implement `addLink(name, url)` method
     - Validate name and url are non-empty after trim
     - Normalize URL: prepend https:// if protocol missing
@@ -186,7 +186,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Clear input fields after adding
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-  - [~] 9.3 Write property tests for link creation
+  - [x] 9.3 Write property tests for link creation
     - **Property 13: Link Creation**
     - **Validates: Requirements 10.1**
     - **Property 8: Task List Growth Invariant (applies to links too)**
@@ -194,8 +194,8 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - **Property 14: Link Input Validation**
     - **Validates: Requirements 10.4**
 
-- [ ] 10. Implement Quick Links - Delete and Rendering
-  - [~] 10.1 Implement link deletion
+- [x] 10. Implement Quick Links - Delete and Rendering
+  - [x] 10.1 Implement link deletion
     - Implement `deleteLink(id)` method
     - Remove link from links array by ID using filter
     - Save updated array to Local Storage
@@ -203,7 +203,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Ensure display updates within 100ms
     - _Requirements: 12.1, 12.2, 12.3_
 
-  - [~] 10.2 Implement link opening and rendering
+  - [x] 10.2 Implement link opening and rendering
     - Implement link button click handler using `window.open(url, '_blank')`
     - Set `noopener` and `noreferrer` for security
     - Implement `renderLinks()` method to generate button elements
@@ -213,17 +213,17 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Update DOM element `#links-list`
     - _Requirements: 11.1, 11.2, 12.1, 13.2_
 
-  - [~] 10.3 Write property tests for link operations
+  - [x] 10.3 Write property tests for link operations
     - **Property 8: Task List Growth Invariant (delete part for links)**
     - **Validates: Requirements 12.1**
     - **Property 16: Link Button Text Mapping**
     - **Validates: Requirements 11.2**
 
-- [~] 11. Checkpoint - Verify all components integrated
+- [x] 11. Checkpoint - Verify all components integrated
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Implement main application initialization
-  - [~] 12.1 Create App object with module pattern structure
+- [x] 12. Implement main application initialization
+  - [x] 12.1 Create App object with module pattern structure
     - Use IIFE to create isolated namespaces for each module
     - Export public APIs for Storage, GreetingDisplay, FocusTimer, TodoManager, QuickLinksManager
     - Implement main `init()` function to initialize all modules
@@ -231,7 +231,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Implement generateId() helper function for unique ID generation
     - _Requirements: 14.3, 16.1_
 
-  - [~] 12.2 Wire event handlers for all components
+  - [x] 12.2 Wire event handlers for all components
     - Attach event listeners for todo input, add button, list interactions
     - Attach event listeners for timer buttons (start, stop, reset)
     - Attach event listeners for link input, add button, button clicks
@@ -239,8 +239,8 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Ensure all interactions provide feedback within 50ms
     - _Requirements: 16.2_
 
-- [ ] 13. Implement CSS styling
-  - [~] 13.1 Create base layout and component styles
+- [x] 13. Implement CSS styling
+  - [x] 13.1 Create base layout and component styles
     - Implement responsive centered layout (max-width 800px)
     - Style greeting display with large time/date text
     - Style timer with prominent MM:SS display and control buttons
@@ -248,7 +248,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Style link buttons with name display and delete controls
     - _Requirements: 15.1, 15.2, 15.3_
 
-  - [~] 13.2 Add interactive states and visual feedback
+  - [x] 13.2 Add interactive states and visual feedback
     - Implement hover states for buttons with smooth transitions (50ms)
     - Implement focus states for inputs with accent color borders
     - Style completed tasks with strikethrough and reduced opacity
@@ -257,14 +257,14 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Add visual feedback for timer running state
     - _Requirements: 15.4, 15.5, 16.2_
 
-- [~] 14. Write integration tests for Local Storage persistence
+- [x] 14. Write integration tests for Local Storage persistence
   - Test task persistence across page reloads
   - Test link persistence across page reloads
   - Test storage error handling (quota exceeded, unavailable)
   - Test data corruption recovery (invalid JSON)
   - _Requirements: 9.1, 9.2, 9.3, 13.1, 13.2, 13.3_
 
-- [~] 15. Write integration tests for performance requirements
+- [x] 15. Write integration tests for performance requirements
   - Measure and verify dashboard loads within 1 second
   - Measure and verify interactions provide feedback within 50ms
   - Measure and verify storage operations update display within 100ms
@@ -283,6 +283,39 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
 
 - [~] 17. Final checkpoint - Complete verification
   - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 18. Implement custom name in greeting
+  - [x] 18.1 Add validated name controls, personalized time-based greeting, change/default actions, and Local Storage persistence
+    - Preserve clock/date and safely render user text
+    - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
+  - [x] 18.2 Verify default, validation, name changes, safe rendering, and refresh persistence
+    - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
+
+- [x] 19. Implement custom Pomodoro duration
+  - [x] 19.1 Add whole-minute duration controls and persistence, applying/resetting to the selected duration with one countdown interval
+    - Preserve Start, Pause, Reset and completion notification cleanup
+    - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
+  - [x] 19.2 Verify duration validation, refresh, state transitions, notification text, and interval cleanup
+    - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
+
+- [x] 20. Implement Light / Dark Mode
+  - [x] 20.1 Add accessible theme toggle, complete responsive palettes, preference persistence, and reduced-motion transitions
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
+  - [x] 20.2 Verify both themes, refresh restoration, contrast, keyboard controls, mobile layout, and storage failures
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
+
+- [x] 21. Prevent duplicate tasks
+  - [x] 21.1 Reject case-insensitive trimmed duplicates on add/edit with clear feedback, including existing stored tasks
+    - Preserve legacy data and existing task operations
+    - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5_
+  - [x] 21.2 Verify normalization, feedback, loaded/completed tasks, identity-preserving edits, and CRUD regressions
+    - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5_
+
+- [ ] 22. Verify and prepare GitHub Pages pull request
+  - [x] 22.1 Verify all four challenges and regression suites, including static assets served under the repository path
+    - _Requirements: 14.1, 14.2, 14.3, 14.4, 16.1, 16.2, 17.5, 18–21_
+  - [ ] 22.2 Confirm the existing Pages deployment source and create a pull request targeting main with code and specification updates
+    - Preserve the repository name and existing Pages URL; report access blockers without marking complete
 
 ## Notes
 
@@ -321,7 +354,24 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     { "id": 16, "tasks": ["10.3", "12.1"] },
     { "id": 17, "tasks": ["12.2", "13.1"] },
     { "id": 18, "tasks": ["13.2"] },
-    { "id": 19, "tasks": ["14", "15", "16"] }
+    { "id": 19, "tasks": ["14", "15", "16"] },
+    { "id": 20, "tasks": ["18.1", "19.1", "20.1", "21.1"] },
+    { "id": 21, "tasks": ["18.2", "19.2", "20.2", "21.2"] },
+    { "id": 22, "tasks": ["22.1"] },
+    { "id": 23, "tasks": ["22.2"] }
   ]
 }
 ```
+
+## Verification status (2026-10-10)
+
+Implementation and test tasks 6–15 are verified complete. Jest covers the actual modules, with at least 100 runs per property. Browser tests verify task/link lifecycles, reload persistence, storage failures, notification fallback, performance budgets, desktop/mobile layout, contrast, keyboard input, and new-tab isolation.
+
+Task 16 remains in progress: automated coverage is available for Chromium, Google Chrome, Microsoft Edge, Firefox, and Playwright WebKit. WebKit engine coverage is distinct from testing the native Safari application. This Linux environment cannot run native Safari, so its required Safari 14+ validation remains unrun. Task 17 remains open until that browser check is completed. See `docs/verification.md` for evidence, reproducible commands, and the Safari checklist. No application test failure is being waived.
+
+
+## Four challenges verification (2026-10-10)
+
+Tasks 18–21 and 22.1 are verified complete: 180 Jest tests across 12 suites and 125 browser checks across Chromium, Firefox, WebKit, Google Chrome, and Microsoft Edge pass. Preference refreshes, timer transitions and interval cleanup, duplicate validation against stored/completed tasks, both theme palettes at desktop/mobile widths, reduced motion, and relative assets under the GitHub Pages project path are covered.
+
+Task 22.2 remains pending because GitHub API/Pages access returns Forbidden, preventing confirmation of the deployment source and PR creation. The repository name and Pages URL have not been changed. Tasks 16 and 17 still require native Safari on macOS. See `docs/verification.md`.

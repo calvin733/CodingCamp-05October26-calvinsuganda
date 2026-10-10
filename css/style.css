@@ -1,3 +1,47 @@
+/* Theme palettes: keep every component readable in both modes. */
+:root {
+    color-scheme: light;
+    --page-background: #f5f5f5;
+    --card-background: #ffffff;
+    --text-color: #333333;
+    --muted-color: #666666;
+    --accent-color: #2463a7;
+    --primary-background: #2463a7;
+    --primary-hover: #1e528b;
+    --button-text: #ffffff;
+    --secondary-background: #e0e0e0;
+    --secondary-hover: #d0d0d0;
+    --border-color: #cccccc;
+    --danger-background: #c62828;
+    --danger-hover: #a82020;
+    --success-background: #287a36;
+    --success-hover: #21672d;
+    --notice-background: #fff3cd;
+    --notice-border: #856404;
+    --notice-color: #856404;
+    --running-background: #eef5fd;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-background: #111827;
+    --card-background: #1b2636;
+    --text-color: #e8edf5;
+    --muted-color: #b6c1d0;
+    --accent-color: #9fcaff;
+    --secondary-background: #334155;
+    --secondary-hover: #43536a;
+    --border-color: #506078;
+    --danger-background: #b52635;
+    --danger-hover: #961c2a;
+    --success-background: #247036;
+    --success-hover: #1d5d2b;
+    --notice-background: #382e16;
+    --notice-border: #f7dd96;
+    --notice-color: #f7dd96;
+    --running-background: #233951;
+}
+
 /* Base Styles and Reset */
 * {
     margin: 0;
@@ -7,8 +51,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color: #f5f5f5;
-    color: #333333;
+    background-color: var(--page-background);
+    color: var(--text-color);
     line-height: 1.6;
     padding: 20px;
 }
@@ -21,7 +65,7 @@ body {
 
 /* Section Base Styles */
 section {
-    background-color: #ffffff;
+    background-color: var(--card-background);
     border-radius: 6px;
     padding: 24px;
     margin-bottom: 20px;
@@ -43,7 +87,7 @@ section h2 {
     font-size: 32px;
     font-weight: bold;
     margin-bottom: 12px;
-    color: #4a90e2;
+    color: var(--accent-color);
 }
 
 .time-display {
@@ -55,7 +99,7 @@ section h2 {
 
 .date-display {
     font-size: 18px;
-    color: #666666;
+    color: var(--muted-color);
 }
 
 /* Timer Section */
@@ -68,7 +112,7 @@ section h2 {
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     margin: 20px 0;
-    color: #333333;
+    color: var(--text-color);
 }
 
 .timer-controls {
@@ -81,8 +125,8 @@ section h2 {
 .timer-notification-fallback {
     margin-top: 20px;
     padding: 16px;
-    background-color: #fff3cd;
-    border: 2px solid #ffc107;
+    background-color: var(--notice-background);
+    border: 2px solid var(--notice-border);
     border-radius: 6px;
     animation: slideDown 0.3s ease-out;
 }
@@ -92,13 +136,13 @@ section h2 {
 }
 
 .notification-content h3 {
-    color: #856404;
+    color: var(--notice-color);
     font-size: 20px;
     margin-bottom: 8px;
 }
 
 .notification-content p {
-    color: #856404;
+    color: var(--notice-color);
     font-size: 16px;
 }
 
@@ -125,25 +169,25 @@ section h2 {
 }
 
 .btn-primary {
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--primary-background);
+    color: var(--button-text);
 }
 
 .btn-primary:hover {
-    background-color: #357abd;
+    background-color: var(--primary-hover);
 }
 
 .btn-secondary {
-    background-color: #e0e0e0;
-    color: #333333;
+    background-color: var(--secondary-background);
+    color: var(--text-color);
 }
 
 .btn-secondary:hover {
-    background-color: #d0d0d0;
+    background-color: var(--secondary-hover);
 }
 
 .btn:focus {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
 
@@ -157,14 +201,14 @@ section h2 {
 #todo-input {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 16px;
 }
 
 #todo-input:focus {
-    outline: none;
-    border-color: #4a90e2;
+    outline: 2px solid var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .todo-list {
@@ -176,7 +220,7 @@ section h2 {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--secondary-background);
 }
 
 .todo-item:last-child {
@@ -191,12 +235,15 @@ section h2 {
 
 .todo-text {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 16px;
 }
 
 .todo-text.completed {
     text-decoration: line-through;
-    opacity: 0.6;
+    color: var(--muted-color);
+    opacity: 0.95;
 }
 
 .todo-edit,
@@ -210,28 +257,28 @@ section h2 {
 }
 
 .todo-edit {
-    background-color: #e0e0e0;
-    color: #333333;
+    background-color: var(--secondary-background);
+    color: var(--text-color);
 }
 
 .todo-edit:hover {
-    background-color: #d0d0d0;
+    background-color: var(--secondary-hover);
 }
 
 .todo-delete {
-    background-color: #f44336;
-    color: white;
+    background-color: var(--danger-background);
+    color: var(--button-text);
 }
 
 .todo-delete:hover {
-    background-color: #d32f2f;
+    background-color: var(--danger-hover);
 }
 
 /* Edit Mode Styles */
 .todo-text-input {
     flex: 1;
     padding: 6px 10px;
-    border: 1px solid #4a90e2;
+    border: 1px solid var(--accent-color);
     border-radius: 4px;
     font-size: 16px;
 }
@@ -246,21 +293,21 @@ section h2 {
 }
 
 .todo-save {
-    background-color: #5cb85c;
-    color: white;
+    background-color: var(--success-background);
+    color: var(--button-text);
 }
 
 .todo-save:hover {
-    background-color: #4cae4c;
+    background-color: var(--success-hover);
 }
 
 .todo-cancel {
-    background-color: #e0e0e0;
-    color: #333333;
+    background-color: var(--secondary-background);
+    color: var(--text-color);
 }
 
 .todo-cancel:hover {
-    background-color: #d0d0d0;
+    background-color: var(--secondary-hover);
 }
 
 /* Links Section */
@@ -273,7 +320,7 @@ section h2 {
 #link-name,
 #link-url {
     padding: 8px 12px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 16px;
 }
@@ -288,8 +335,8 @@ section h2 {
 
 #link-name:focus,
 #link-url:focus {
-    outline: none;
-    border-color: #4a90e2;
+    outline: 2px solid var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .links-list {
@@ -306,8 +353,8 @@ section h2 {
 
 .link-button {
     padding: 10px 16px;
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--primary-background);
+    color: var(--button-text);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -316,13 +363,13 @@ section h2 {
 }
 
 .link-button:hover {
-    background-color: #357abd;
+    background-color: var(--primary-hover);
 }
 
 .link-delete {
     padding: 6px 10px;
-    background-color: #f44336;
-    color: white;
+    background-color: var(--danger-background);
+    color: var(--button-text);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -332,7 +379,7 @@ section h2 {
 }
 
 .link-delete:hover {
-    background-color: #d32f2f;
+    background-color: var(--danger-hover);
 }
 
 /* Responsive Design */
@@ -367,14 +414,89 @@ section h2 {
 /* Accessibility */
 button:focus,
 input:focus {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
 
 /* Empty State Messages */
 .empty-message {
     text-align: center;
-    color: #999999;
+    color: var(--muted-color);
     padding: 20px;
     font-style: italic;
+}
+
+/* Accessible controls and immediate timer feedback */
+button {
+    min-height: 44px;
+    min-width: 44px;
+    transition: background-color 0.05s ease;
+}
+input[type="text"] { min-height: 44px; min-width: 0; }
+.todo-check-target {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+}
+.timer-display.running {
+    color: var(--accent-color);
+    background-color: var(--running-background);
+    border-radius: 6px;
+}
+.storage-status {
+    padding: 12px 16px;
+    border: 1px solid var(--notice-color);
+    border-radius: 6px;
+    color: var(--notice-color);
+    background-color: var(--notice-background);
+}
+.link-button { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+    body { padding: 12px; }
+    section { padding: 16px; }
+    .todo-item { flex-wrap: wrap; gap: 8px; padding: 12px 0; }
+    .todo-text, .todo-text-input { flex-basis: calc(100% - 60px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+/* Preference controls share the existing card layout. */
+.dashboard-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.preference-form { margin: 20px auto 0; text-align: left; }
+.preference-form label { display: block; font-weight: 600; margin-bottom: 8px; }
+.preference-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.preference-controls input { flex: 1; width: 100%; min-width: 120px; }
+#focus-duration { flex: 0 1 120px; }
+input[type="number"], #name-input {
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+}
+input {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    accent-color: var(--accent-color);
+}
+input::placeholder { color: var(--muted-color); opacity: 1; }
+input[aria-invalid="true"] { border-color: var(--notice-color); }
+.preference-hint { color: var(--muted-color); font-size: 14px; margin-top: 8px; }
+.validation-message {
+    color: var(--notice-color);
+    background-color: var(--notice-background);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 8px 0 12px;
+}
+#greeting { overflow-wrap: anywhere; }
+body, section, input[type="text"], input[type="number"], .timer-display, .storage-status, .validation-message {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+@media (max-width: 600px) {
+    .preference-controls { flex-direction: column; align-items: stretch; }
+    .preference-controls input, #focus-duration { flex: auto; min-width: 0; }
 }
