@@ -70,6 +70,9 @@ test('keyboard creation, whitespace validation, empty edit and Escape', async ({
 test('link opening passes noopener/noreferrer and rejects unsafe URLs', async ({ page }) => {
     await page.evaluate(() => { window.open = (...args) => { window.openArguments = args; return null; }; });
     await addLink(page, 'Example', 'example.com');
+    // Center the new control before a real click; headless Firefox can drop
+    // pointer events near the viewport edge after the page grows.
+    await page.locator('.link-button').evaluate(el => el.scrollIntoView({ block: 'center' }));
     await page.locator('.link-button').click();
     expect(await page.evaluate(() => window.openArguments)).toEqual(['https://example.com/', '_blank', 'noopener,noreferrer']);
     await addLink(page, 'Unsafe', 'javascript:alert(1)');
@@ -86,6 +89,7 @@ test('a link opens an actual new tab with no opener', async ({ page, context }) 
         status: 200, contentType: 'text/html', body: '<title>Saved website</title><h1>Saved website</h1>'
     }));
     await addLink(page, 'Example', 'example.com');
+    await page.locator('.link-button').evaluate(el => el.scrollIntoView({ block: 'center' }));
     const [tab] = await Promise.all([
         context.waitForEvent('page'), page.locator('.link-button').click()
     ]);

@@ -48,7 +48,7 @@ npm test -- --runInBand --runTestsByPath __tests__/storage-properties.test.js
 
 Jest loads the actual browser application through `test-utils/setup.js` and uses jsdom and fake timers. Storage round-trip properties use fast-check with 100 runs each. The suite also checks corrupt data, quota/security errors, availability probes, and preservation of unrelated storage. Greeting formatting properties exercise the actual module in `tests/properties/time-formatting.test.js`; greeting DOM updates are checked in `__tests__/greeting-properties.test.js`.
 
-The full validation completed with 11 suites and 150 tests passing. This includes task creation/editing/completion/deletion, quick-link validation/rendering/deletion, actual DOM event wiring, persistence, and asynchronous notification cleanup. Task and link operation properties live in `tests/properties/` and run at least 100 generated cases each.
+The full validation completed with 12 suites and 180 tests passing. This includes task creation/editing/completion/deletion, quick-link validation/rendering/deletion, actual DOM event wiring, persistence, and asynchronous notification cleanup. `dashboard-challenges.test.js` adds name and theme preferences, custom-duration state transitions, duplicate feedback, legacy data preservation, and preference storage failures. Task/link operation properties and the new duplicate/duration properties run at least 100 generated cases each.
 
 The Playwright workflow is separate from Jest:
 
@@ -56,7 +56,7 @@ The Playwright workflow is separate from Jest:
 npm run test:browser
 ```
 
-It runs 15 checks in each of five browser projects (75 checks total). Browser installation instructions, recorded versions, performance evidence, and the pending native Safari validation are documented in [`docs/verification.md`](../docs/verification.md).
+It runs 25 checks in each of five browser projects (125 checks total), including both theme palettes at desktop/mobile widths and the GitHub Pages project path. Browser installation instructions, recorded results, performance evidence, and the pending native Safari validation are documented in [`docs/verification.md`](../docs/verification.md).
 
 ### Browser-Based Tests (Optional)
 

@@ -17,7 +17,8 @@ test('Property 7: Task Creation - Requirements 5.1, 5.5', () => {
 });
 
 test('Property 8: Task List Growth Invariant - Requirements 5.2, 8.1', () => {
-    fc.assert(fc.property(fc.array(text, { minLength: 1, maxLength: 8 }), fc.nat(), (values, choice) => {
+    fc.assert(fc.property(fc.uniqueArray(text, { minLength: 1, maxLength: 8,
+        selector: value => value.trim().toLowerCase() }), fc.nat(), (values, choice) => {
         reset();
         values.forEach((value, index) => {
             App.TodoManager.addTask(value);

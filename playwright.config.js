@@ -29,12 +29,18 @@ module.exports = defineConfig({
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure'
     },
-    webServer: {
+    webServer: [{
         command: 'python3 -m http.server 8765 --bind 127.0.0.1',
         url: 'http://127.0.0.1:8765',
         reuseExistingServer: false,
         timeout: 10000
-    },
+    }, {
+        // Serve beneath the repository path as GitHub Pages does for project sites.
+        command: 'python3 -m http.server 8766 --bind 127.0.0.1 --directory ..',
+        url: 'http://127.0.0.1:8766/CodingCamp-05October26-calvinsuganda/',
+        reuseExistingServer: false,
+        timeout: 10000
+    }],
     projects: [
         { name: 'chromium', use: { browserName: 'chromium', launchOptions: {
             executablePath: chromium, args: ['--no-sandbox', '--disable-dev-shm-usage']

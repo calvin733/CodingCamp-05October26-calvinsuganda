@@ -9,20 +9,41 @@
 <body>
     <main class="container">
         <p id="storage-status" class="storage-status" role="status" aria-live="polite" hidden></p>
+        <div class="dashboard-toolbar">
+            <button id="theme-toggle" class="btn btn-secondary" type="button" aria-pressed="false">Dark Mode</button>
+        </div>
         <!-- Greeting Display Section -->
         <section class="greeting-section">
             <h1 id="greeting">Good Morning</h1>
             <div id="current-time" class="time-display">00:00</div>
             <div id="current-date" class="date-display">Loading...</div>
+            <form id="name-form" class="preference-form" novalidate>
+                <label for="name-input">Your name</label>
+                <div class="preference-controls">
+                    <input id="name-input" type="text" autocomplete="given-name" maxlength="80" placeholder="Enter your name" aria-describedby="name-validation">
+                    <button class="btn btn-primary" type="submit">Save Name</button>
+                    <button id="name-clear" class="btn btn-secondary" type="button">Use Default Greeting</button>
+                </div>
+                <p id="name-validation" class="validation-message" role="status" aria-live="polite" hidden></p>
+            </form>
         </section>
 
         <!-- Focus Timer Section -->
         <section class="timer-section">
             <h2>Focus Timer</h2>
+            <form id="duration-form" class="preference-form" novalidate>
+                <label for="focus-duration">Focus duration (minutes)</label>
+                <div class="preference-controls">
+                    <input id="focus-duration" type="number" min="1" max="180" step="1" value="25" inputmode="numeric" aria-describedby="duration-hint duration-validation">
+                    <button class="btn btn-primary" type="submit">Apply Duration</button>
+                </div>
+                <p id="duration-hint" class="preference-hint">Choose 1–180 whole minutes. Applying stops and resets the current session.</p>
+                <p id="duration-validation" class="validation-message" role="status" aria-live="polite" hidden></p>
+            </form>
             <div id="timer-display" class="timer-display">25:00</div>
             <div class="timer-controls">
                 <button id="timer-start" class="btn btn-primary">Start</button>
-                <button id="timer-stop" class="btn btn-secondary">Stop</button>
+                <button id="timer-stop" class="btn btn-secondary">Pause</button>
                 <button id="timer-reset" class="btn btn-secondary">Reset</button>
             </div>
             <!-- Visual fallback notification for when Notification API unavailable -->
@@ -38,9 +59,10 @@
         <section class="todo-section">
             <h2>My Tasks</h2>
             <div class="todo-input-container">
-                <input type="text" id="todo-input" aria-label="New task" placeholder="Add a task..." maxlength="500">
+                <input type="text" id="todo-input" aria-label="New task" placeholder="Add a task..." maxlength="500" aria-describedby="todo-validation">
                 <button id="todo-add" class="btn btn-primary">Add</button>
             </div>
+            <p id="todo-validation" class="validation-message" role="status" aria-live="polite" hidden></p>
             <ul id="todo-list" class="todo-list" aria-label="Tasks"></ul>
         </section>
 

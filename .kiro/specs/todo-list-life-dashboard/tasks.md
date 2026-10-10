@@ -284,6 +284,39 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
 - [~] 17. Final checkpoint - Complete verification
   - Ensure all tests pass, ask the user if questions arise.
 
+- [x] 18. Implement custom name in greeting
+  - [x] 18.1 Add validated name controls, personalized time-based greeting, change/default actions, and Local Storage persistence
+    - Preserve clock/date and safely render user text
+    - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
+  - [x] 18.2 Verify default, validation, name changes, safe rendering, and refresh persistence
+    - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
+
+- [x] 19. Implement custom Pomodoro duration
+  - [x] 19.1 Add whole-minute duration controls and persistence, applying/resetting to the selected duration with one countdown interval
+    - Preserve Start, Pause, Reset and completion notification cleanup
+    - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
+  - [x] 19.2 Verify duration validation, refresh, state transitions, notification text, and interval cleanup
+    - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.6_
+
+- [x] 20. Implement Light / Dark Mode
+  - [x] 20.1 Add accessible theme toggle, complete responsive palettes, preference persistence, and reduced-motion transitions
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
+  - [x] 20.2 Verify both themes, refresh restoration, contrast, keyboard controls, mobile layout, and storage failures
+    - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
+
+- [x] 21. Prevent duplicate tasks
+  - [x] 21.1 Reject case-insensitive trimmed duplicates on add/edit with clear feedback, including existing stored tasks
+    - Preserve legacy data and existing task operations
+    - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5_
+  - [x] 21.2 Verify normalization, feedback, loaded/completed tasks, identity-preserving edits, and CRUD regressions
+    - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5_
+
+- [ ] 22. Verify and prepare GitHub Pages pull request
+  - [x] 22.1 Verify all four challenges and regression suites, including static assets served under the repository path
+    - _Requirements: 14.1, 14.2, 14.3, 14.4, 16.1, 16.2, 17.5, 18–21_
+  - [ ] 22.2 Confirm the existing Pages deployment source and create a pull request targeting main with code and specification updates
+    - Preserve the repository name and existing Pages URL; report access blockers without marking complete
+
 ## Notes
 
 - **Tasks marked with `*` are optional** and can be skipped for faster MVP delivery
@@ -321,7 +354,11 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     { "id": 16, "tasks": ["10.3", "12.1"] },
     { "id": 17, "tasks": ["12.2", "13.1"] },
     { "id": 18, "tasks": ["13.2"] },
-    { "id": 19, "tasks": ["14", "15", "16"] }
+    { "id": 19, "tasks": ["14", "15", "16"] },
+    { "id": 20, "tasks": ["18.1", "19.1", "20.1", "21.1"] },
+    { "id": 21, "tasks": ["18.2", "19.2", "20.2", "21.2"] },
+    { "id": 22, "tasks": ["22.1"] },
+    { "id": 23, "tasks": ["22.2"] }
   ]
 }
 ```
@@ -331,3 +368,10 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
 Implementation and test tasks 6–15 are verified complete. Jest covers the actual modules, with at least 100 runs per property. Browser tests verify task/link lifecycles, reload persistence, storage failures, notification fallback, performance budgets, desktop/mobile layout, contrast, keyboard input, and new-tab isolation.
 
 Task 16 remains in progress: automated coverage is available for Chromium, Google Chrome, Microsoft Edge, Firefox, and Playwright WebKit. WebKit engine coverage is distinct from testing the native Safari application. This Linux environment cannot run native Safari, so its required Safari 14+ validation remains unrun. Task 17 remains open until that browser check is completed. See `docs/verification.md` for evidence, reproducible commands, and the Safari checklist. No application test failure is being waived.
+
+
+## Four challenges verification (2026-10-10)
+
+Tasks 18–21 and 22.1 are verified complete: 180 Jest tests across 12 suites and 125 browser checks across Chromium, Firefox, WebKit, Google Chrome, and Microsoft Edge pass. Preference refreshes, timer transitions and interval cleanup, duplicate validation against stored/completed tasks, both theme palettes at desktop/mobile widths, reduced motion, and relative assets under the GitHub Pages project path are covered.
+
+Task 22.2 remains pending because GitHub API/Pages access returns Forbidden, preventing confirmation of the deployment source and PR creation. The repository name and Pages URL have not been changed. Tasks 16 and 17 still require native Safari on macOS. See `docs/verification.md`.

@@ -92,7 +92,8 @@ const App = (function() {
         function clear() {
             try {
                 // Remove specific app keys to avoid clearing unrelated storage
-                const appKeys = ['dashboard_tasks', 'dashboard_links', 'dashboard_timer_state'];
+                const appKeys = ['dashboard_tasks', 'dashboard_links', 'dashboard_timer_state',
+                    'dashboard_name', 'dashboard_focus_minutes', 'dashboard_theme'];
                 appKeys.forEach(function(key) {
                     localStorage.removeItem(key);
                 });
@@ -142,6 +143,31 @@ const App = (function() {
 
         // Internal state
         let clockInterval = null;
+        let userName = '';
+
+        function saveName(name) {
+            const value = typeof name === 'string' ? name.trim() : '';
+            const input = document.getElementById('name-input');
+            if (!value || value.length > 80) {
+                showValidation('name-validation', 'Please enter a name between 1 and 80 characters.', input);
+                return false;
+            }
+            userName = value;
+            Storage.set('dashboard_name', userName);
+            showValidation('name-validation', '', input);
+            if (input) input.value = userName;
+            updateTime();
+            return true;
+        }
+
+        function clearName() {
+            userName = '';
+            Storage.set('dashboard_name', '');
+            const input = document.getElementById('name-input');
+            if (input) input.value = '';
+            showValidation('name-validation', '', input);
+            updateTime();
+        }
 
         /**
          * Format time as HH:MM
@@ -219,7 +245,7 @@ const App = (function() {
             // Update greeting
             const greetingElement = document.getElementById('greeting');
             if (greetingElement) {
-                greetingElement.textContent = getGreeting();
+                greetingElement.textContent = userName ? getGreeting() + ', ' + userName + '!' : getGreeting();
             }
         }
 
@@ -228,6 +254,12 @@ const App = (function() {
          */
         function init() {
             destroy();
+            const savedName = Storage.get('dashboard_name');
+            userName = typeof savedName === 'string' && savedName.trim().length <= 80
+                ? savedName.trim() : '';
+            const input = document.getElementById('name-input');
+            if (input) input.value = userName;
+            showValidation('name-validation', '', input);
             // Update immediately on init
             updateTime();
             
@@ -250,6 +282,8 @@ const App = (function() {
             init: init,
             updateTime: updateTime,
             getGreeting: getGreeting,
+            saveName: saveName,
+            clearName: clearName,
             destroy: destroy,
             // Expose formatting functions for testing
             formatTime: formatTime,
@@ -270,11 +304,39 @@ const App = (function() {
 
         // Internal state
         let remainingSeconds = 1500; // 25 minutes in seconds
+        let focusMinutes = 25;
         let isRunning = false;
         let timerInterval = null;
         let hasNotified = false; // Flag to ensure notification fires only once per completion
         let fallbackTimeout = null;
         let session = 0;
+
+        function isValidDuration(value) {
+            return (typeof value === 'number' || typeof value === 'string') &&
+                Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 180;
+        }
+
+        function setDuration(minutes) {
+            const input = document.getElementById('focus-duration');
+            if (!isValidDuration(minutes)) {
+                showValidation('duration-validation', 'Please enter a whole number from 1 to 180 minutes.', input);
+                return false;
+            }
+            focusMinutes = Number(minutes);
+            Storage.set('dashboard_focus_minutes', focusMinutes);
+            showValidation('duration-validation', '', input);
+            if (input) input.value = focusMinutes;
+            reset();
+            return true;
+        }
+
+        function getDuration() {
+            return focusMinutes;
+        }
+
+        function completionMessage() {
+            return 'Your ' + focusMinutes + '-minute focus session is complete.';
+        }
 
         /**
          * Format seconds as MM:SS
@@ -344,7 +406,7 @@ const App = (function() {
             if (checkNotificationSupport() && Notification.permission === 'granted') {
                 try {
                     new Notification('Focus Session Complete!', {
-                        body: 'Your 25-minute focus session is complete.',
+                        body: completionMessage(),
                         tag: 'focus-timer-completion', // Prevents duplicate notifications
                         requireInteraction: false
                     });
@@ -364,6 +426,8 @@ const App = (function() {
         function showFallbackNotification() {
             const fallback = document.getElementById('timer-notification-fallback');
             if (fallback) {
+                const message = fallback.querySelector('p');
+                if (message) message.textContent = completionMessage();
                 fallback.style.display = 'block';
                 
                 // Only the current session may hide its fallback.
@@ -409,15 +473,16 @@ const App = (function() {
         }
 
         /**
-         * Initialize timer with 1500 seconds (25 minutes)
+         * Initialize a stopped timer with the saved duration (25 minutes by default)
          */
         function init() {
             destroy();
-            remainingSeconds = 1500;
-            isRunning = false;
-            timerInterval = null;
-            hasNotified = false;
-            updateDisplay();
+            const savedMinutes = Storage.get('dashboard_focus_minutes');
+            focusMinutes = typeof savedMinutes === 'number' && isValidDuration(savedMinutes) ? savedMinutes : 25;
+            const input = document.getElementById('focus-duration');
+            if (input) input.value = focusMinutes;
+            showValidation('duration-validation', '', input);
+            reset();
         }
 
         /**
@@ -477,7 +542,7 @@ const App = (function() {
         }
 
         /**
-         * Reset timer to 25 minutes (1500 seconds)
+         * Reset timer to the selected focus duration
          * Can be called from any state (stopped, running, paused)
          * Validates: Requirements 4.4, 4.5
          */
@@ -495,8 +560,8 @@ const App = (function() {
                 }
             }
             
-            // Reset to 1500 seconds (25 minutes)
-            remainingSeconds = 1500;
+            // Start the next session with the selected duration.
+            remainingSeconds = focusMinutes * 60;
             hasNotified = false;
             
             // Hide any displayed notification fallback
@@ -505,7 +570,7 @@ const App = (function() {
                 fallback.style.display = 'none';
             }
             
-            // Update display to show 25:00
+            // Update display with the full selected duration.
             updateDisplay();
         }
 
@@ -529,6 +594,8 @@ const App = (function() {
             start: start,
             stop: stop,
             reset: reset,
+            setDuration: setDuration,
+            getDuration: getDuration,
             getRemainingTime: getRemainingTime,
             formatTime: formatTime,
             destroy: destroy,
@@ -592,12 +659,16 @@ const App = (function() {
                 editingId = null;
             }
             renderTasks();
+            clearTaskError();
             const list = document.getElementById('todo-list');
             if (list) {
                 list.addEventListener('click', handleClick);
                 list.addEventListener('change', handleChange);
                 list.addEventListener('keydown', handleKeydown);
+                list.addEventListener('input', clearTaskError);
             }
+            const input = document.getElementById('todo-input');
+            if (input) input.addEventListener('input', clearTaskError);
         }
 
         /**
@@ -630,10 +701,15 @@ const App = (function() {
         function addTask(text) {
             const value = typeof text === 'string' ? text.trim().slice(0, 500) : '';
             if (!value) return false;
+            const input = document.getElementById('todo-input');
+            if (isDuplicate(value)) {
+                showValidation('todo-validation', 'A task with this name already exists.', input);
+                return false;
+            }
+            clearTaskError();
             tasks.push({ id: generateTaskId(), text: value, completed: false, createdAt: Date.now() });
             saveTasks();
             renderTasks();
-            const input = document.getElementById('todo-input');
             if (input) {
                 input.value = '';
                 input.focus();
@@ -645,6 +721,13 @@ const App = (function() {
             const task = tasks.find(task => task.id === id);
             const value = typeof text === 'string' ? text.trim().slice(0, 500) : '';
             if (!task || !value) return false;
+            const row = findRow(id);
+            const input = row && row.querySelector('.todo-text-input');
+            if (isDuplicate(value, id)) {
+                showValidation('todo-validation', 'A task with this name already exists.', input);
+                return false;
+            }
+            clearTaskError();
             task.text = value;
             editingId = null;
             saveTasks();
@@ -669,6 +752,7 @@ const App = (function() {
 
         function deleteTask(id) {
             if (!tasks.some(task => task.id === id)) return false;
+            clearTaskError();
             tasks = tasks.filter(task => task.id !== id);
             if (editingId === id) editingId = null;
             saveTasks();
@@ -680,6 +764,17 @@ const App = (function() {
             const list = document.getElementById('todo-list');
             return list && Array.from(list.querySelectorAll('.todo-item'))
                 .find(row => row.dataset.id === id);
+        }
+
+        function isDuplicate(text, currentId) {
+            const name = text.trim().toLowerCase();
+            return tasks.some(task => task.id !== currentId && task.text.trim().toLowerCase() === name);
+        }
+
+        function clearTaskError() {
+            showValidation('todo-validation', '', document.getElementById('todo-input'));
+            const edit = document.querySelector('#todo-list .todo-text-input');
+            if (edit) edit.removeAttribute('aria-invalid');
         }
 
         function renderTasks() {
@@ -706,6 +801,7 @@ const App = (function() {
                     input.maxLength = 500;
                     input.value = task.text;
                     input.setAttribute('aria-label', 'Edit task');
+                    input.setAttribute('aria-describedby', 'todo-validation');
                     row.appendChild(input);
                     row.appendChild(makeButton('Save', 'todo-save'));
                     row.appendChild(makeButton('Cancel', 'todo-cancel'));
@@ -730,6 +826,7 @@ const App = (function() {
             const id = row.dataset.id;
             if (button.classList.contains('todo-delete')) deleteTask(id);
             else if (button.classList.contains('todo-edit')) {
+                clearTaskError();
                 editingId = id;
                 renderTasks();
                 const input = findRow(id).querySelector('.todo-text-input');
@@ -739,6 +836,7 @@ const App = (function() {
                 editTask(id, row.querySelector('.todo-text-input').value);
             } else if (button.classList.contains('todo-cancel')) {
                 editingId = null;
+                clearTaskError();
                 renderTasks();
             }
         }
@@ -753,11 +851,12 @@ const App = (function() {
         function handleKeydown(event) {
             if (!event.target.classList.contains('todo-text-input')) return;
             const id = event.target.closest('.todo-item').dataset.id;
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.isComposing) {
                 event.preventDefault();
                 editTask(id, event.target.value);
             } else if (event.key === 'Escape') {
                 editingId = null;
+                clearTaskError();
                 renderTasks();
             }
         }
@@ -770,6 +869,36 @@ const App = (function() {
             _setEditingId: function(id) { editingId = id; },
             _getEditingId: function() { return editingId; }
         };
+    })();
+
+    // ============================================
+    // Theme Manager Module
+    // ============================================
+    const ThemeManager = (function() {
+        let theme = 'light';
+
+        function render() {
+            document.documentElement.dataset.theme = theme;
+            const button = document.getElementById('theme-toggle');
+            if (button) {
+                button.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+                button.setAttribute('aria-pressed', String(theme === 'dark'));
+                button.setAttribute('aria-label', 'Dark mode');
+            }
+        }
+
+        function init() {
+            theme = Storage.get('dashboard_theme') === 'dark' ? 'dark' : 'light';
+            render();
+        }
+
+        function toggle() {
+            theme = theme === 'light' ? 'dark' : 'light';
+            Storage.set('dashboard_theme', theme);
+            render();
+        }
+
+        return { init, toggle };
     })();
 
     // ============================================
@@ -900,6 +1029,35 @@ const App = (function() {
         }
     }
 
+    function showValidation(id, message, input) {
+        const status = document.getElementById(id);
+        if (status) {
+            status.textContent = message;
+            status.hidden = !message;
+        }
+        if (input) {
+            if (message) input.setAttribute('aria-invalid', 'true');
+            else input.removeAttribute('aria-invalid');
+        }
+    }
+
+    function saveNameFromInput(event) {
+        event.preventDefault();
+        const input = document.getElementById('name-input');
+        if (input) GreetingDisplay.saveName(input.value);
+    }
+
+    function applyDurationFromInput(event) {
+        event.preventDefault();
+        const input = document.getElementById('focus-duration');
+        if (input) FocusTimer.setDuration(input.value);
+    }
+
+    function clearPreferenceError(event) {
+        const id = event.target.id === 'name-input' ? 'name-validation' : 'duration-validation';
+        showValidation(id, '', event.target);
+    }
+
     function addTaskFromInput() {
         const input = document.getElementById('todo-input');
         if (input) TodoManager.addTask(input.value);
@@ -927,6 +1085,7 @@ const App = (function() {
         if (!Storage.isAvailable()) {
             showStorageWarning('Browser storage unavailable. Data will not persist.');
         }
+        ThemeManager.init();
         GreetingDisplay.init();
         FocusTimer.init();
         TodoManager.init();
@@ -936,7 +1095,9 @@ const App = (function() {
             'timer-stop': FocusTimer.stop,
             'timer-reset': FocusTimer.reset,
             'todo-add': addTaskFromInput,
-            'link-add': addLinkFromInputs
+            'link-add': addLinkFromInputs,
+            'name-clear': GreetingDisplay.clearName,
+            'theme-toggle': ThemeManager.toggle
         };
         Object.keys(clicks).forEach(id => {
             const button = document.getElementById(id);
@@ -948,6 +1109,14 @@ const App = (function() {
         });
         const url = document.getElementById('link-url');
         if (url) url.addEventListener('input', clearUrlError);
+        const nameForm = document.getElementById('name-form');
+        if (nameForm) nameForm.addEventListener('submit', saveNameFromInput);
+        const durationForm = document.getElementById('duration-form');
+        if (durationForm) durationForm.addEventListener('submit', applyDurationFromInput);
+        ['name-input', 'focus-duration'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) input.addEventListener('input', clearPreferenceError);
+        });
     }
 
     // Public API
@@ -958,6 +1127,7 @@ const App = (function() {
         FocusTimer: FocusTimer,
         TodoManager: TodoManager,
         QuickLinksManager: QuickLinksManager,
+        ThemeManager: ThemeManager,
         generateId: generateId
     };
 })();
