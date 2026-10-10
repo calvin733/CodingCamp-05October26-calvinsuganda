@@ -48,7 +48,15 @@ npm test -- --runInBand --runTestsByPath __tests__/storage-properties.test.js
 
 Jest loads the actual browser application through `test-utils/setup.js` and uses jsdom and fake timers. Storage round-trip properties use fast-check with 100 runs each. The suite also checks corrupt data, quota/security errors, availability probes, and preservation of unrelated storage. Greeting formatting properties exercise the actual module in `tests/properties/time-formatting.test.js`; greeting DOM updates are checked in `__tests__/greeting-properties.test.js`.
 
-The full checkpoint 5 validation completed with 8 suites and 112 tests passing. This verifies the implemented core modules; task creation, editing, rendering, and quick links are still pending in the Kiro checklist.
+The full validation completed with 11 suites and 150 tests passing. This includes task creation/editing/completion/deletion, quick-link validation/rendering/deletion, actual DOM event wiring, persistence, and asynchronous notification cleanup. Task and link operation properties live in `tests/properties/` and run at least 100 generated cases each.
+
+The Playwright workflow is separate from Jest:
+
+```bash
+npm run test:browser
+```
+
+It runs 15 checks in each of five browser projects (75 checks total). Browser installation instructions, recorded versions, performance evidence, and the pending native Safari validation are documented in [`docs/verification.md`](../docs/verification.md).
 
 ### Browser-Based Tests (Optional)
 
@@ -64,7 +72,7 @@ The browser-based tests use the fast-check library loaded via CDN and run 100 it
 - Test statistics (total, passed, failed)
 - Ability to run specific test groups (tasks only, links only)
 
-The legacy browser runners are separate from the verified Jest workflow and were not part of checkpoint 5 validation. The JavaScript test files now run under Jest rather than directly with `node`.
+The legacy HTML runners are separate from the verified Jest and Playwright workflows. The JavaScript test files run under Jest rather than directly with `node`.
 
 ## Test Configuration
 

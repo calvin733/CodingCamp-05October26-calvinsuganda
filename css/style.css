@@ -43,7 +43,7 @@ section h2 {
     font-size: 32px;
     font-weight: bold;
     margin-bottom: 12px;
-    color: #4a90e2;
+    color: #2463a7;
 }
 
 .time-display {
@@ -125,12 +125,12 @@ section h2 {
 }
 
 .btn-primary {
-    background-color: #4a90e2;
+    background-color: #2463a7;
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #357abd;
+    background-color: #1e528b;
 }
 
 .btn-secondary {
@@ -143,7 +143,7 @@ section h2 {
 }
 
 .btn:focus {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid #2463a7;
     outline-offset: 2px;
 }
 
@@ -164,7 +164,7 @@ section h2 {
 
 #todo-input:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2463a7;
 }
 
 .todo-list {
@@ -191,12 +191,15 @@ section h2 {
 
 .todo-text {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 16px;
 }
 
 .todo-text.completed {
     text-decoration: line-through;
-    opacity: 0.6;
+    color: #666666;
+    opacity: 0.95;
 }
 
 .todo-edit,
@@ -219,19 +222,19 @@ section h2 {
 }
 
 .todo-delete {
-    background-color: #f44336;
+    background-color: #c62828;
     color: white;
 }
 
 .todo-delete:hover {
-    background-color: #d32f2f;
+    background-color: #a82020;
 }
 
 /* Edit Mode Styles */
 .todo-text-input {
     flex: 1;
     padding: 6px 10px;
-    border: 1px solid #4a90e2;
+    border: 1px solid #2463a7;
     border-radius: 4px;
     font-size: 16px;
 }
@@ -246,12 +249,12 @@ section h2 {
 }
 
 .todo-save {
-    background-color: #5cb85c;
+    background-color: #287a36;
     color: white;
 }
 
 .todo-save:hover {
-    background-color: #4cae4c;
+    background-color: #21672d;
 }
 
 .todo-cancel {
@@ -289,7 +292,7 @@ section h2 {
 #link-name:focus,
 #link-url:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2463a7;
 }
 
 .links-list {
@@ -306,7 +309,7 @@ section h2 {
 
 .link-button {
     padding: 10px 16px;
-    background-color: #4a90e2;
+    background-color: #2463a7;
     color: white;
     border: none;
     border-radius: 4px;
@@ -316,12 +319,12 @@ section h2 {
 }
 
 .link-button:hover {
-    background-color: #357abd;
+    background-color: #1e528b;
 }
 
 .link-delete {
     padding: 6px 10px;
-    background-color: #f44336;
+    background-color: #c62828;
     color: white;
     border: none;
     border-radius: 4px;
@@ -332,7 +335,7 @@ section h2 {
 }
 
 .link-delete:hover {
-    background-color: #d32f2f;
+    background-color: #a82020;
 }
 
 /* Responsive Design */
@@ -367,14 +370,51 @@ section h2 {
 /* Accessibility */
 button:focus,
 input:focus {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid #2463a7;
     outline-offset: 2px;
 }
 
 /* Empty State Messages */
 .empty-message {
     text-align: center;
-    color: #999999;
+    color: #666666;
     padding: 20px;
     font-style: italic;
+}
+
+/* Accessible controls and immediate timer feedback */
+button {
+    min-height: 44px;
+    min-width: 44px;
+    transition: background-color 0.05s ease;
+}
+input[type="text"] { min-height: 44px; min-width: 0; }
+.todo-check-target {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+}
+.timer-display.running {
+    color: #2463a7;
+    background-color: #eef5fd;
+    border-radius: 6px;
+}
+.storage-status {
+    padding: 12px 16px;
+    border: 1px solid #856404;
+    border-radius: 6px;
+    color: #856404;
+    background-color: #fff3cd;
+}
+.link-button { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+    body { padding: 12px; }
+    section { padding: 16px; }
+    .todo-item { flex-wrap: wrap; gap: 8px; padding: 12px 0; }
+    .todo-text, .todo-text-input { flex-basis: calc(100% - 60px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
 }

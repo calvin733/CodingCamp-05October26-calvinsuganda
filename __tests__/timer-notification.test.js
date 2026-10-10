@@ -105,7 +105,7 @@ describe('Focus Timer - Notification Tests', () => {
             return response;
         });
         completeTimer();
-        await Promise.resolve();
+        await jest.advanceTimersByTimeAsync(0);
         expect(notification.requestPermission).toHaveBeenCalledTimes(1);
         expect(notification).toHaveBeenCalledTimes(response === 'granted' ? 1 : 0);
         expect(document.getElementById('timer-notification-fallback').style.display)
@@ -136,5 +136,41 @@ describe('Focus Timer - Notification Tests', () => {
         App.FocusTimer.reset();
         completeTimer();
         expect(notification).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(['reject', 'throw'])('a permission prompt that can %s falls back safely', async failure => {
+        const notification = mockNotification('default');
+        notification.requestPermission.mockImplementation(() => {
+            if (failure === 'throw') throw new Error('Blocked prompt');
+            return Promise.reject(new Error('Blocked prompt'));
+        });
+        completeTimer();
+        await jest.advanceTimersByTimeAsync(0);
+        expect(notification).not.toHaveBeenCalled();
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('block');
+    });
+
+    test('a permission prompt resolving after reset cannot notify the next session', async () => {
+        const notification = mockNotification('default');
+        let resolvePermission;
+        notification.requestPermission.mockReturnValue(new Promise(resolve => { resolvePermission = resolve; }));
+        completeTimer();
+        App.FocusTimer.reset();
+        notification.permission = 'granted';
+        resolvePermission('granted');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(notification).not.toHaveBeenCalled();
+        expect(document.getElementById('timer-notification-fallback').style.display).toBe('none');
+    });
+
+    test('reset and destroy cancel fallback cleanup timers', () => {
+        completeTimer();
+        expect(jest.getTimerCount()).toBe(1);
+        App.FocusTimer.reset();
+        expect(jest.getTimerCount()).toBe(0);
+        App.FocusTimer.showNotification();
+        expect(jest.getTimerCount()).toBe(1);
+        App.FocusTimer.destroy();
+        expect(jest.getTimerCount()).toBe(0);
     });
 });
