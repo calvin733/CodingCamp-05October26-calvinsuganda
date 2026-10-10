@@ -80,7 +80,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - Implement `destroy()` to clean up intervals
     - _Requirements: 3.4, 3.5_
 
-  - [-] 4.4 Write property tests for Focus Timer
+  - [x] 4.4 Write property tests for Focus Timer
     - **Property 4: Timer Display Formatting**
     - **Validates: Requirements 3.3**
     - **Property 5: Timer State Transitions**
