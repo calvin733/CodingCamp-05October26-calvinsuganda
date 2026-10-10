@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Property-Based Tests</title>
+    <script src="https://cdn.jsdelivr.net/npm/fast-check@3.15.0/lib/bundle.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .test-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .test-result {
+            margin: 12px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .pass {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .fail {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .property-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .property-validates {
+            font-size: 14px;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 4px;
+        }
+        .property-details {
+            font-size: 14px;
+            margin-top: 8px;
+            color: #495057;
+        }
+        .stats {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .error-details {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Storage Module Property-Based Tests</h1>
+    <p>Testing Storage round-trip properties using fast-check with 100+ iterations per property</p>
+    
+    <div class="test-controls">
+        <button onclick="runAllTests()">Run All Property Tests</button>
+        <button onclick="runTaskTests()">Run Task Tests Only</button>
+        <button onclick="runLinkTests()">Run Link Tests Only</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="stats" class="stats" style="display: none;">
+        <h3>Test Statistics</h3>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-pass" style="color: #28a745;">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-fail" style="color: #dc3545;">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let passCount = 0;
+        let failCount = 0;
+
+        function updateStats() {
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('stat-total').textContent = passCount + failCount;
+            document.getElementById('stat-pass').textContent = passCount;
+            document.getElementById('stat-fail').textContent = failCount;
+        }
+
+        function addResult(propertyName, validates, passed, message, errorDetails = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            
+            let html = `
+                <div class="property-header">
+                    ${passed ? '✓' : '✗'} ${propertyName}
+                </div>
+                <div class="property-validates">Validates: ${validates}</div>
+                <div class="property-details">${message}</div>
+            `;
+            
+            if (errorDetails) {
+                html += `<div class="error-details">${errorDetails}</div>`;
+            }
+            
+            resultDiv.innerHTML = html;
+            resultsDiv.appendChild(resultDiv);
+            
+            if (passed) {
+                passCount++;
+            } else {
+                failCount++;
+            }
+            updateStats();
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            passCount = 0;
+            failCount = 0;
+            document.getElementById('stats').style.display = 'none';
+        }
+
+        // ============================================
+        // Property Test Generators
+        // ============================================
+
+        // Generator for Task objects
+        const taskGenerator = fc.record({
+            id: fc.string({ minLength: 1, maxLength: 50 }),
+            text: fc.string({ minLength: 1, maxLength: 500 }),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0, max: Date.now() + 1000000 })
+        });
+
+        // Generator for arrays of Tasks
+        const taskArrayGenerator = fc.array(taskGenerator, { minLength: 0, maxLength: 50 });
+
+        // Generator for Link objects
+        const linkGenerator = fc.record({
+            id: fc.string({ minLength: 1, maxLength: 50 }),
+            name: fc.string({ minLength: 1, maxLength: 50 }),
+            url: fc.webUrl(),
+            createdAt: fc.integer({ min: 0, max: Date.now() + 1000000 })
+        });
+
+        // Generator for arrays of Links
+        const linkArrayGenerator = fc.array(linkGenerator, { minLength: 0, maxLength: 50 });
+
+        // ============================================
+        // Property 10: Task Storage Round-Trip
+        // ============================================
+
+        function testProperty10_SingleTask() {
+            const propertyName = "Property 10: Task Storage Round-Trip (Single Task)";
+            const validates = "Requirements 5.3, 6.3, 7.4, 8.2, 9.2";
+            
+            try {
+                const result = fc.check(
+                    fc.property(taskGenerator, (task) => {
+                        // Save task to Local Storage
+                        App.Storage.set('test_task', task);
+                        
+                        // Retrieve task from Local Storage
+                        const retrieved = App.Storage.get('test_task');
+                        
+                        // Check deep equality
+                        const isEqual = retrieved !== null &&
+                            retrieved.id === task.id &&
+                            retrieved.text === task.text &&
+                            retrieved.completed === task.completed &&
+                            retrieved.createdAt === task.createdAt;
+                        
+                        // Clean up
+                        App.Storage.remove('test_task');
+                        
+                        return isEqual;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Single task round-trip property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All tasks can be saved and retrieved with perfect fidelity.`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        function testProperty10_TaskArray() {
+            const propertyName = "Property 10: Task Storage Round-Trip (Task Array)";
+            const validates = "Requirements 5.3, 6.3, 7.4, 8.2, 9.2";
+            
+            try {
+                const result = fc.check(
+                    fc.property(taskArrayGenerator, (tasks) => {
+                        // Save task array to Local Storage
+                        App.Storage.set('dashboard_tasks', tasks);
+                        
+                        // Retrieve task array from Local Storage
+                        const retrieved = App.Storage.get('dashboard_tasks');
+                        
+                        // Check deep equality
+                        if (retrieved === null || !Array.isArray(retrieved)) {
+                            return false;
+                        }
+                        
+                        if (retrieved.length !== tasks.length) {
+                            return false;
+                        }
+                        
+                        for (let i = 0; i < tasks.length; i++) {
+                            if (retrieved[i].id !== tasks[i].id ||
+                                retrieved[i].text !== tasks[i].text ||
+                                retrieved[i].completed !== tasks[i].completed ||
+                                retrieved[i].createdAt !== tasks[i].createdAt) {
+                                return false;
+                            }
+                        }
+                        
+                        // Clean up
+                        App.Storage.remove('dashboard_tasks');
+                        
+                        return true;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Task array round-trip property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All task arrays can be saved and retrieved with perfect fidelity.`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        // ============================================
+        // Property 15: Link Storage Round-Trip
+        // ============================================
+
+        function testProperty15_SingleLink() {
+            const propertyName = "Property 15: Link Storage Round-Trip (Single Link)";
+            const validates = "Requirements 10.3, 12.2, 13.2";
+            
+            try {
+                const result = fc.check(
+                    fc.property(linkGenerator, (link) => {
+                        // Save link to Local Storage
+                        App.Storage.set('test_link', link);
+                        
+                        // Retrieve link from Local Storage
+                        const retrieved = App.Storage.get('test_link');
+                        
+                        // Check deep equality
+                        const isEqual = retrieved !== null &&
+                            retrieved.id === link.id &&
+                            retrieved.name === link.name &&
+                            retrieved.url === link.url &&
+                            retrieved.createdAt === link.createdAt;
+                        
+                        // Clean up
+                        App.Storage.remove('test_link');
+                        
+                        return isEqual;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Single link round-trip property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All links can be saved and retrieved with perfect fidelity.`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        function testProperty15_LinkArray() {
+            const propertyName = "Property 15: Link Storage Round-Trip (Link Array)";
+            const validates = "Requirements 10.3, 12.2, 13.2";
+            
+            try {
+                const result = fc.check(
+                    fc.property(linkArrayGenerator, (links) => {
+                        // Save link array to Local Storage
+                        App.Storage.set('dashboard_links', links);
+                        
+                        // Retrieve link array from Local Storage
+                        const retrieved = App.Storage.get('dashboard_links');
+                        
+                        // Check deep equality
+                        if (retrieved === null || !Array.isArray(retrieved)) {
+                            return false;
+                        }
+                        
+                        if (retrieved.length !== links.length) {
+                            return false;
+                        }
+                        
+                        for (let i = 0; i < links.length; i++) {
+                            if (retrieved[i].id !== links[i].id ||
+                                retrieved[i].name !== links[i].name ||
+                                retrieved[i].url !== links[i].url ||
+                                retrieved[i].createdAt !== links[i].createdAt) {
+                                return false;
+                            }
+                        }
+                        
+                        // Clean up
+                        App.Storage.remove('dashboard_links');
+                        
+                        return true;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Link array round-trip property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All link arrays can be saved and retrieved with perfect fidelity.`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        // ============================================
+        // Test Runners
+        // ============================================
+
+        function runTaskTests() {
+            clearResults();
+            console.log('Running Task Storage Property Tests...');
+            testProperty10_SingleTask();
+            testProperty10_TaskArray();
+        }
+
+        function runLinkTests() {
+            clearResults();
+            console.log('Running Link Storage Property Tests...');
+            testProperty15_SingleLink();
+            testProperty15_LinkArray();
+        }
+
+        function runAllTests() {
+            clearResults();
+            console.log('Running All Storage Property Tests...');
+            
+            // Run Task tests
+            testProperty10_SingleTask();
+            testProperty10_TaskArray();
+            
+            // Run Link tests
+            testProperty15_SingleLink();
+            testProperty15_LinkArray();
+            
+            console.log('All property tests completed.');
+        }
+
+        // Check if fast-check is loaded
+        if (typeof fc === 'undefined') {
+            document.body.innerHTML = '<h1 style="color: red;">Error: fast-check library failed to load. Please check your internet connection.</h1>';
+        }
+    </script>
+</body>
+</html>

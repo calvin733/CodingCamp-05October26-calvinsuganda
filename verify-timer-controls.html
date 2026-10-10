@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Timer Controls - Task 4.2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .timer-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        #timer-display {
+            font-size: 72px;
+            font-family: monospace;
+            color: #2c3e50;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .timer-controls {
+            margin: 20px 0;
+        }
+        .btn {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #0b7dda;
+        }
+        .test-log {
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .test-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .pass { color: #4CAF50; }
+        .fail { color: #f44336; }
+        .info { color: #2196F3; }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Timer Controls Verification - Task 4.2</h1>
+        
+        <div class="instructions">
+            <h3>Manual Test Instructions:</h3>
+            <ol>
+                <li>Click <strong>Start</strong> - timer should begin counting down</li>
+                <li>Wait a few seconds and click <strong>Stop</strong> - timer should pause</li>
+                <li>Click <strong>Start</strong> again - timer should resume from where it stopped</li>
+                <li>Click <strong>Reset</strong> - timer should return to 25:00 and stop</li>
+                <li>Start the timer, then click <strong>Reset</strong> while running - should stop and return to 25:00</li>
+            </ol>
+        </div>
+
+        <div class="timer-section">
+            <h2>Focus Timer</h2>
+            <div id="timer-display">25:00</div>
+            <div class="timer-controls">
+                <button id="timer-start" class="btn btn-primary">Start</button>
+                <button id="timer-stop" class="btn btn-secondary">Stop</button>
+                <button id="timer-reset" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+
+        <h2>Automated Verification</h2>
+        <button id="run-tests" class="btn btn-primary">Run Automated Tests</button>
+        <div id="test-results" class="test-log"></div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize the app
+        App.FocusTimer.init();
+        
+        // Wire up event listeners
+        document.getElementById('timer-start').addEventListener('click', function() {
+            App.FocusTimer.start();
+            log('Start button clicked', 'info');
+        });
+        
+        document.getElementById('timer-stop').addEventListener('click', function() {
+            App.FocusTimer.stop();
+            log('Stop button clicked', 'info');
+        });
+        
+        document.getElementById('timer-reset').addEventListener('click', function() {
+            App.FocusTimer.reset();
+            log('Reset button clicked', 'info');
+        });
+
+        // Logging function
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.innerHTML += `<div class="test-item ${type}">[${timestamp}] ${message}</div>`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        // Automated tests
+        document.getElementById('run-tests').addEventListener('click', async function() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="test-item info">Starting automated tests...</div>';
+            
+            // Test 1: Initial state
+            App.FocusTimer.init();
+            const initialTime = App.FocusTimer.getRemainingTime();
+            if (initialTime === 1500) {
+                log('✓ Test 1: Timer initializes to 1500 seconds', 'pass');
+            } else {
+                log(`✗ Test 1: Expected 1500, got ${initialTime}`, 'fail');
+            }
+
+            // Test 2: Start decrements time
+            App.FocusTimer.init();
+            App.FocusTimer.start();
+            await sleep(2100); // Wait 2+ seconds
+            const timeAfterStart = App.FocusTimer.getRemainingTime();
+            App.FocusTimer.stop();
+            if (timeAfterStart < initialTime && timeAfterStart >= initialTime - 3) {
+                log(`✓ Test 2: Timer counting down (now at ${timeAfterStart}s)`, 'pass');
+            } else {
+                log(`✗ Test 2: Timer not counting correctly (got ${timeAfterStart}s)`, 'fail');
+            }
+
+            // Test 3: Stop pauses timer
+            App.FocusTimer.init();
+            App.FocusTimer.start();
+            await sleep(1100);
+            App.FocusTimer.stop();
+            const timeAtStop = App.FocusTimer.getRemainingTime();
+            await sleep(2000);
+            const timeAfterPause = App.FocusTimer.getRemainingTime();
+            if (timeAtStop === timeAfterPause) {
+                log(`✓ Test 3: Stop pauses timer (stayed at ${timeAtStop}s)`, 'pass');
+            } else {
+                log(`✗ Test 3: Timer didn't pause (${timeAtStop} -> ${timeAfterPause})`, 'fail');
+            }
+
+            // Test 4: Resume from pause
+            App.FocusTimer.start();
+            await sleep(1100);
+            const timeAfterResume = App.FocusTimer.getRemainingTime();
+            App.FocusTimer.stop();
+            if (timeAfterResume < timeAfterPause) {
+                log(`✓ Test 4: Timer resumes from pause (now ${timeAfterResume}s)`, 'pass');
+            } else {
+                log(`✗ Test 4: Timer didn't resume (${timeAfterPause} -> ${timeAfterResume})`, 'fail');
+            }
+
+            // Test 5: Reset returns to 1500
+            App.FocusTimer.reset();
+            const timeAfterReset = App.FocusTimer.getRemainingTime();
+            if (timeAfterReset === 1500) {
+                log('✓ Test 5: Reset returns to 1500 seconds', 'pass');
+            } else {
+                log(`✗ Test 5: Reset failed (got ${timeAfterReset}s)`, 'fail');
+            }
+
+            // Test 6: Reset stops running timer
+            App.FocusTimer.start();
+            await sleep(1100);
+            App.FocusTimer.reset();
+            await sleep(2000);
+            const timeAfterResetCheck = App.FocusTimer.getRemainingTime();
+            if (timeAfterResetCheck === 1500) {
+                log('✓ Test 6: Reset stops running timer', 'pass');
+            } else {
+                log(`✗ Test 6: Timer still running after reset (${timeAfterResetCheck}s)`, 'fail');
+            }
+
+            // Test 7: Display updates
+            const displayText = document.getElementById('timer-display').textContent;
+            if (displayText === '25:00') {
+                log('✓ Test 7: Display shows 25:00 after reset', 'pass');
+            } else {
+                log(`✗ Test 7: Display shows ${displayText} instead of 25:00`, 'fail');
+            }
+
+            log('Automated tests completed!', 'info');
+        });
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Module Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Storage Module Test Suite</h1>
+    <p>This page tests the Storage abstraction layer implementation.</p>
+    
+    <button onclick="runTests()">Run Tests</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        function addResult(testName, passed, message) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `<strong>${testName}</strong>: ${passed ? '✓ PASS' : '✗ FAIL'} ${message ? '- ' + message : ''}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function runTests() {
+            clearResults();
+            
+            // Test 1: isAvailable
+            const available = App.Storage.isAvailable();
+            addResult('isAvailable()', available, available ? 'Local Storage is available' : 'Local Storage is NOT available');
+            
+            if (!available) {
+                addResult('Tests Aborted', false, 'Cannot run tests without Local Storage');
+                return;
+            }
+            
+            // Test 2: set and get with simple string
+            App.Storage.set('test_string', 'Hello, World!');
+            const retrieved = App.Storage.get('test_string');
+            addResult('set/get string', retrieved === 'Hello, World!', `Expected "Hello, World!", got "${retrieved}"`);
+            
+            // Test 3: set and get with object
+            const testObj = { id: '123', text: 'Test Task', completed: false };
+            App.Storage.set('test_object', testObj);
+            const retrievedObj = App.Storage.get('test_object');
+            const objMatch = retrievedObj && 
+                retrievedObj.id === testObj.id && 
+                retrievedObj.text === testObj.text && 
+                retrievedObj.completed === testObj.completed;
+            addResult('set/get object', objMatch, objMatch ? 'Object round-trip successful' : 'Object mismatch');
+            
+            // Test 4: set and get with array
+            const testArray = [
+                { id: '1', text: 'Task 1', completed: false },
+                { id: '2', text: 'Task 2', completed: true }
+            ];
+            App.Storage.set('test_array', testArray);
+            const retrievedArray = App.Storage.get('test_array');
+            const arrayMatch = retrievedArray && 
+                Array.isArray(retrievedArray) && 
+                retrievedArray.length === 2 &&
+                retrievedArray[0].id === '1' &&
+                retrievedArray[1].completed === true;
+            addResult('set/get array', arrayMatch, arrayMatch ? 'Array round-trip successful' : 'Array mismatch');
+            
+            // Test 5: get non-existent key
+            const nonExistent = App.Storage.get('non_existent_key');
+            addResult('get non-existent key', nonExistent === null, `Expected null, got ${nonExistent}`);
+            
+            // Test 6: remove key
+            App.Storage.set('test_remove', 'will be removed');
+            App.Storage.remove('test_remove');
+            const afterRemove = App.Storage.get('test_remove');
+            addResult('remove()', afterRemove === null, afterRemove === null ? 'Key successfully removed' : 'Key still exists');
+            
+            // Test 7: clear application data
+            App.Storage.set('dashboard_tasks', [{ id: '1', text: 'Task' }]);
+            App.Storage.set('dashboard_links', [{ id: '1', name: 'Link' }]);
+            App.Storage.clear();
+            const tasksAfterClear = App.Storage.get('dashboard_tasks');
+            const linksAfterClear = App.Storage.get('dashboard_links');
+            const clearSuccess = tasksAfterClear === null && linksAfterClear === null;
+            addResult('clear()', clearSuccess, clearSuccess ? 'All app data cleared' : 'Some data remains');
+            
+            // Test 8: Handle corrupted JSON (simulate by directly setting invalid JSON)
+            localStorage.setItem('corrupted_data', '{invalid json}');
+            const corruptedResult = App.Storage.get('corrupted_data');
+            addResult('handle corrupted JSON', corruptedResult === null, 'Gracefully returns null for invalid JSON');
+            localStorage.removeItem('corrupted_data');
+            
+            // Test 9: Storage round-trip with special characters
+            const specialText = 'Task with "quotes", emoji 🚀, and symbols: < > & \' "';
+            App.Storage.set('test_special', specialText);
+            const specialRetrieved = App.Storage.get('test_special');
+            addResult('special characters', specialText === specialRetrieved, 'Special characters preserved');
+            
+            // Test 10: Empty string handling
+            App.Storage.set('test_empty', '');
+            const emptyRetrieved = App.Storage.get('test_empty');
+            addResult('empty string', emptyRetrieved === '', 'Empty string handled correctly');
+            
+            // Test 11: Boolean values
+            App.Storage.set('test_bool_true', true);
+            App.Storage.set('test_bool_false', false);
+            const boolTrue = App.Storage.get('test_bool_true');
+            const boolFalse = App.Storage.get('test_bool_false');
+            addResult('boolean values', boolTrue === true && boolFalse === false, 'Boolean values preserved');
+            
+            // Test 12: Number values
+            App.Storage.set('test_number', 42);
+            App.Storage.set('test_float', 3.14159);
+            const numInt = App.Storage.get('test_number');
+            const numFloat = App.Storage.get('test_float');
+            addResult('number values', numInt === 42 && numFloat === 3.14159, 'Number values preserved');
+            
+            // Clean up test data
+            App.Storage.remove('test_string');
+            App.Storage.remove('test_object');
+            App.Storage.remove('test_array');
+            App.Storage.remove('test_special');
+            App.Storage.remove('test_empty');
+            App.Storage.remove('test_bool_true');
+            App.Storage.remove('test_bool_false');
+            App.Storage.remove('test_number');
+            App.Storage.remove('test_float');
+            
+            addResult('Test Suite Complete', true, 'All tests finished');
+        }
+    </script>
+</body>
+</html>

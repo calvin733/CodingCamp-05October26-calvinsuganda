@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List Life Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Greeting Display Section -->
+        <section class="greeting-section">
+            <h1 id="greeting">Good Morning</h1>
+            <div id="current-time" class="time-display">00:00</div>
+            <div id="current-date" class="date-display">Loading...</div>
+        </section>
+
+        <!-- Focus Timer Section -->
+        <section class="timer-section">
+            <h2>Focus Timer</h2>
+            <div id="timer-display" class="timer-display">25:00</div>
+            <div class="timer-controls">
+                <button id="timer-start" class="btn btn-primary">Start</button>
+                <button id="timer-stop" class="btn btn-secondary">Stop</button>
+                <button id="timer-reset" class="btn btn-secondary">Reset</button>
+            </div>
+            <!-- Visual fallback notification for when Notification API unavailable -->
+            <div id="timer-notification-fallback" class="timer-notification-fallback" style="display: none;">
+                <div class="notification-content">
+                    <h3>Focus Session Complete!</h3>
+                    <p>Your 25-minute focus session is complete.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Todo List Section -->
+        <section class="todo-section">
+            <h2>My Tasks</h2>
+            <div class="todo-input-container">
+                <input type="text" id="todo-input" placeholder="Add a task..." maxlength="500">
+                <button id="todo-add" class="btn btn-primary">Add</button>
+            </div>
+            <ul id="todo-list" class="todo-list"></ul>
+        </section>
+
+        <!-- Quick Links Section -->
+        <section class="links-section">
+            <h2>Quick Links</h2>
+            <div class="links-input-container">
+                <input type="text" id="link-name" placeholder="Website name" maxlength="50">
+                <input type="text" id="link-url" placeholder="URL (e.g., https://example.com)">
+                <button id="link-add" class="btn btn-primary">Add Link</button>
+            </div>
+            <div id="links-list" class="links-list"></div>
+        </section>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

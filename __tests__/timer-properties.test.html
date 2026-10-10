@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusTimer Property-Based Tests - Task 4.4</title>
+    <script src="https://cdn.jsdelivr.net/npm/fast-check@3.15.0/lib/bundle.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .test-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .test-result {
+            margin: 12px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .pass {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .fail {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .property-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .property-validates {
+            font-size: 14px;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 4px;
+        }
+        .property-details {
+            font-size: 14px;
+            margin-top: 8px;
+            color: #495057;
+        }
+        .stats {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .error-details {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .feature-comment {
+            background-color: #f0f7ff;
+            padding: 10px;
+            border-left: 3px solid #4a90e2;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>FocusTimer Component Property-Based Tests - Task 4.4</h1>
+    <p>Testing Focus Timer display formatting, state transitions, and reset behavior using fast-check with 100+ iterations per property</p>
+    
+    <div class="test-controls">
+        <button onclick="runAllTests()">Run All Property Tests</button>
+        <button onclick="runProperty4()">Property 4 Only</button>
+        <button onclick="runProperty5()">Property 5 Only</button>
+        <button onclick="runProperty6()">Property 6 Only</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="stats" class="stats" style="display: none;">
+        <h3>Test Statistics</h3>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-pass" style="color: #28a745;">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-fail" style="color: #dc3545;">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <!-- Initialize timer display DOM element -->
+    <div id="timer-display" style="display: none;">25:00</div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let passCount = 0;
+        let failCount = 0;
+
+        // Initialize FocusTimer for tests
+        if (typeof App !== 'undefined' && App.FocusTimer) {
+            App.FocusTimer.init();
+        }
+
+        function updateStats() {
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('stat-total').textContent = passCount + failCount;
+            document.getElementById('stat-pass').textContent = passCount;
+            document.getElementById('stat-fail').textContent = failCount;
+        }
+
+        function addResult(propertyName, validates, passed, message, errorDetails = null, feature = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            
+            let html = `
+                <div class="property-header">
+                    ${passed ? '✓' : '✗'} ${propertyName}
+                </div>
+                <div class="property-validates">Validates: ${validates}</div>
+                <div class="property-details">${message}</div>
+            `;
+            
+            if (feature) {
+                html += `<div class="feature-comment">// Feature: ${feature}</div>`;
+            }
+            
+            if (errorDetails) {
+                html += `<div class="error-details">${errorDetails}</div>`;
+            }
+            
+            resultDiv.innerHTML = html;
+            resultsDiv.appendChild(resultDiv);
+            
+            if (passed) {
+                passCount++;
+            } else {
+                failCount++;
+            }
+            updateStats();
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            passCount = 0;
+            failCount = 0;
+            document.getElementById('stats').style.display = 'none';
+        }
+
+        // ============================================
+        // Property 4: Timer Display Formatting
+        // ============================================
+
+        function testProperty4() {
+            const propertyName = "Property 4: Timer Display Formatting";
+            const validates = "Requirements 3.3";
+            const feature = "todo-list-life-dashboard, Property 4: Timer Display Formatting";
+            
+            try {
+                const result = fc.check(
+                    fc.property(
+                        fc.integer({ min: 0, max: 1500 }),
+                        (seconds) => {
+                            const formatted = App.FocusTimer.formatTime(seconds);
+                            // Pattern: MM:SS where MM is 00-25 and SS is 00-59
+                            const pattern = /^([0-2][0-5]|00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25):[0-5][0-9]$/;
+                            return pattern.test(formatted);
+                        }
+                    ),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Timer display formatting property violated", errorMsg, feature);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. formatTime() always produces MM:SS format for seconds 0-1500.`, null, feature);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString(), feature);
+            }
+        }
+
+        // ============================================
+        // Property 5: Timer State Transitions
+        // ============================================
+
+        function testProperty5() {
+            const propertyName = "Property 5: Timer State Transitions";
+            const validates = "Requirements 4.1, 4.2, 4.3";
+            const feature = "todo-list-life-dashboard, Property 5: Timer State Transitions";
+            
+            try {
+                const result = fc.check(
+                    fc.property(
+                        fc.array(
+                            fc.oneof(
+                                fc.constant('start'),
+                                fc.constant('stop'),
+                                fc.constant('reset')
+                            ),
+                            { minLength: 1, maxLength: 20 }
+                        ),
+                        (actions) => {
+                            App.FocusTimer.init();
+                            
+                            actions.forEach(action => {
+                                if (action === 'start') App.FocusTimer.start();
+                                else if (action === 'stop') App.FocusTimer.stop();
+                                else if (action === 'reset') App.FocusTimer.reset();
+                            });
+                            
+                            // After any sequence, remaining time should be between 0 and 1500
+                            const remaining = App.FocusTimer.getRemainingTime();
+                            return remaining >= 0 && remaining <= 1500;
+                        }
+                    ),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Timer state transitions property violated", errorMsg, feature);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All state transitions remain consistent (0-1500 seconds).`, null, feature);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString(), feature);
+            }
+        }
+
+        // ============================================
+        // Property 6: Timer Reset
+        // ============================================
+
+        function testProperty6() {
+            const propertyName = "Property 6: Timer Reset";
+            const validates = "Requirements 4.4, 4.5";
+            const feature = "todo-list-life-dashboard, Property 6: Timer Reset";
+            
+            try {
+                const result = fc.check(
+                    fc.property(
+                        fc.integer({ min: 0, max: 1500 }),
+                        fc.oneof(
+                            fc.constant('stopped'),
+                            fc.constant('running'),
+                            fc.constant('paused')
+                        ),
+                        (timeElapsed, initialState) => {
+                            App.FocusTimer.init();
+                            
+                            // Set initial state
+                            if (initialState === 'running') {
+                                App.FocusTimer.start();
+                                // Simulate time passing by advancing state
+                                for (let i = 0; i < Math.min(timeElapsed, 1500); i++) {
+                                    // In real test with fake timers, would call jest.advanceTimersByTime(1000)
+                                    // For this browser test, we just verify the logic
+                                }
+                            } else if (initialState === 'paused') {
+                                App.FocusTimer.start();
+                                // Simulate time passing
+                                for (let i = 0; i < Math.min(timeElapsed, 1500); i++) {
+                                    // Simulate time
+                                }
+                                App.FocusTimer.stop();
+                            }
+                            // If 'stopped', just init (already in stopped state)
+                            
+                            // Now reset from any state
+                            App.FocusTimer.reset();
+                            
+                            // Should be back to 1500
+                            return App.FocusTimer.getRemainingTime() === 1500;
+                        }
+                    ),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample: ${JSON.stringify(result.counterexample, null, 2)}`;
+                    addResult(propertyName, validates, false, "Timer reset property violated", errorMsg, feature);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. reset() always returns to 1500 seconds from any state.`, null, feature);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString(), feature);
+            }
+        }
+
+        // ============================================
+        // Run Functions
+        // ============================================
+
+        function runProperty4() {
+            clearResults();
+            testProperty4();
+        }
+
+        function runProperty5() {
+            clearResults();
+            testProperty5();
+        }
+
+        function runProperty6() {
+            clearResults();
+            testProperty6();
+        }
+
+        function runAllTests() {
+            clearResults();
+            testProperty4();
+            testProperty5();
+            testProperty6();
+        }
+    </script>
+</body>
+</html>

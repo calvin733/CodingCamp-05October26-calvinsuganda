@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Notification Tests</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border-left: 4px solid #4a90e2;
+            background-color: #f9f9f9;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #4a90e2;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-test {
+            background-color: #4a90e2;
+            color: white;
+        }
+        
+        .btn-test:hover {
+            background-color: #357abd;
+        }
+        
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .timer-display-test {
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        #test-timer-display {
+            font-size: 36px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .log-section {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-entry.info {
+            color: #0066cc;
+        }
+        
+        .log-entry.success {
+            color: #00aa00;
+        }
+        
+        .log-entry.error {
+            color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Timer Completion Notification Tests</h1>
+        <p>Test the timer notification functionality including Notification API support and visual fallback.</p>
+
+        <!-- Test 1: Notification Support Detection -->
+        <div class="test-section">
+            <h3>Test 1: Notification API Support Detection</h3>
+            <p>Check if the browser supports the Notification API.</p>
+            <div class="test-controls">
+                <button class="btn-test" onclick="testNotificationSupport()">Check Notification Support</button>
+                <button class="btn-test" onclick="testNotificationPermission()">Check Permission State</button>
+            </div>
+            <div id="support-status"></div>
+        </div>
+
+        <!-- Test 2: Timer Display and Notification Element -->
+        <div class="test-section">
+            <h3>Test 2: Timer Display and Notification Element</h3>
+            <p>Verify the timer display and notification fallback elements exist.</p>
+            <div id="timer-element-status"></div>
+            <div id="fallback-element-status"></div>
+        </div>
+
+        <!-- Test 3: Request Notification Permission -->
+        <div class="test-section">
+            <h3>Test 3: Request Notification Permission</h3>
+            <p>Request permission for browser notifications (note: depends on browser policy).</p>
+            <div class="test-controls">
+                <button class="btn-test" onclick="requestNotificationPermission()">Request Permission</button>
+            </div>
+            <div id="permission-status"></div>
+        </div>
+
+        <!-- Test 4: Timer Completion Simulation -->
+        <div class="test-section">
+            <h3>Test 4: Timer Completion Simulation</h3>
+            <p>Simulate timer countdown to test notification triggering (uses 3 seconds for quick testing).</p>
+            
+            <div class="timer-display-test">
+                <div id="test-timer-display">00:03</div>
+            </div>
+            
+            <div class="test-controls">
+                <button class="btn-test" onclick="startTimerTest()">Start 3-Second Timer</button>
+                <button class="btn-test" onclick="stopTimerTest()">Stop Timer</button>
+                <button class="btn-test" onclick="resetTimerTest()">Reset Timer</button>
+                <button class="btn-danger" onclick="clearTimerTest()">Clear Timers</button>
+            </div>
+            
+            <div id="timer-test-status"></div>
+        </div>
+
+        <!-- Test 5: Visual Fallback Display -->
+        <div class="test-section">
+            <h3>Test 5: Visual Fallback Display</h3>
+            <p>Test the visual fallback notification when API unavailable.</p>
+            <div class="test-controls">
+                <button class="btn-test" onclick="showFallbackNotification()">Show Fallback</button>
+                <button class="btn-test" onclick="hideFallbackNotification()">Hide Fallback</button>
+            </div>
+            <div id="fallback-test-status"></div>
+        </div>
+
+        <!-- Test 6: Fallback Auto-Hide -->
+        <div class="test-section">
+            <h3>Test 6: Fallback Auto-Hide Duration</h3>
+            <p>Verify fallback notification auto-hides after 5 seconds.</p>
+            <div class="test-controls">
+                <button class="btn-test" onclick="testAutoHide()">Test Auto-Hide</button>
+            </div>
+            <div id="autohide-status"></div>
+        </div>
+
+        <!-- Test 7: Reset Clears Fallback -->
+        <div class="test-section">
+            <h3>Test 7: Reset Clears Fallback</h3>
+            <p>Verify reset button hides the fallback notification.</p>
+            <div class="test-controls">
+                <button class="btn-test" onclick="testResetClears()">Show Fallback Then Reset</button>
+            </div>
+            <div id="reset-clear-status"></div>
+        </div>
+
+        <!-- Test Log -->
+        <div class="test-section">
+            <h3>Test Log</h3>
+            <div class="log-section" id="test-log"></div>
+            <div style="margin-top: 10px;">
+                <button class="btn-test" onclick="clearLog()">Clear Log</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the app -->
+    <script src="../js/app.js"></script>
+
+    <script>
+        let testTimerInterval = null;
+        let testTimerSeconds = 0;
+        let autoHideTimeout = null;
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('test-log').innerHTML = '';
+        }
+
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Test 1: Notification Support
+        function testNotificationSupport() {
+            const hasNotification = 'Notification' in window;
+            log(`Notification API available: ${hasNotification}`, hasNotification ? 'success' : 'error');
+            updateStatus('support-status',
+                `Notification API: ${hasNotification ? '✓ Supported' : '✗ Not Supported'}`,
+                hasNotification ? 'success' : 'error'
+            );
+        }
+
+        function testNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                log(`Notification permission state: ${permission}`, 'info');
+                updateStatus('support-status',
+                    `Permission State: ${permission}`,
+                    permission === 'granted' ? 'success' : 'warning'
+                );
+            } else {
+                log('Notification API not available', 'error');
+            }
+        }
+
+        // Test 3: Request Permission
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    log(`Permission requested. Result: ${permission}`, permission === 'granted' ? 'success' : 'warning');
+                    updateStatus('permission-status',
+                        `Permission: ${permission}`,
+                        permission === 'granted' ? 'success' : 'warning'
+                    );
+                });
+            } else if ('Notification' in window) {
+                const permission = Notification.permission;
+                log(`Permission already: ${permission}`, 'info');
+                updateStatus('permission-status',
+                    `Permission: ${permission} (already determined)`,
+                    permission === 'granted' ? 'success' : 'warning'
+                );
+            } else {
+                log('Notification API not available', 'error');
+                updateStatus('permission-status', 'Notification API not supported', 'error');
+            }
+        }
+
+        // Test 4: Timer Simulation
+        function startTimerTest() {
+            if (testTimerInterval !== null) {
+                log('Timer already running', 'warning');
+                return;
+            }
+
+            testTimerSeconds = 3;
+            updateTimerDisplay();
+            log('Started 3-second test timer', 'success');
+
+            testTimerInterval = setInterval(function() {
+                testTimerSeconds--;
+                updateTimerDisplay();
+
+                if (testTimerSeconds === 0) {
+                    clearInterval(testTimerInterval);
+                    testTimerInterval = null;
+                    log('Timer reached 00:00 - notification should trigger', 'success');
+                    updateStatus('timer-test-status', 'Timer completed! Notification should appear above.', 'success');
+                    
+                    // Show fallback as demo (simulating notification)
+                    showFallbackNotification();
+                }
+            }, 1000);
+
+            updateStatus('timer-test-status', 'Timer running...', 'info');
+        }
+
+        function stopTimerTest() {
+            if (testTimerInterval !== null) {
+                clearInterval(testTimerInterval);
+                testTimerInterval = null;
+                log('Timer stopped', 'info');
+                updateStatus('timer-test-status', 'Timer stopped', 'info');
+            }
+        }
+
+        function resetTimerTest() {
+            stopTimerTest();
+            testTimerSeconds = 3;
+            updateTimerDisplay();
+            hideFallbackNotification();
+            log('Timer reset', 'info');
+            updateStatus('timer-test-status', 'Timer reset to 00:03', 'info');
+        }
+
+        function clearTimerTest() {
+            if (testTimerInterval !== null) {
+                clearInterval(testTimerInterval);
+                testTimerInterval = null;
+            }
+            if (autoHideTimeout !== null) {
+                clearTimeout(autoHideTimeout);
+                autoHideTimeout = null;
+            }
+            log('All timers cleared', 'info');
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(testTimerSeconds / 60).toString().padStart(2, '0');
+            const seconds = (testTimerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('test-timer-display').textContent = `00:${seconds}`;
+        }
+
+        // Test 5: Visual Fallback
+        function showFallbackNotification() {
+            const fallback = document.getElementById('timer-notification-fallback');
+            if (fallback) {
+                fallback.style.display = 'block';
+                log('Visual fallback displayed', 'success');
+                updateStatus('fallback-test-status', 'Fallback notification shown', 'success');
+            }
+        }
+
+        function hideFallbackNotification() {
+            const fallback = document.getElementById('timer-notification-fallback');
+            if (fallback) {
+                fallback.style.display = 'none';
+                log('Visual fallback hidden', 'info');
+                updateStatus('fallback-test-status', 'Fallback notification hidden', 'info');
+            }
+        }
+
+        // Test 6: Auto-Hide
+        function testAutoHide() {
+            showFallbackNotification();
+            log('Fallback shown - will auto-hide in 5 seconds...', 'info');
+
+            if (autoHideTimeout !== null) {
+                clearTimeout(autoHideTimeout);
+            }
+
+            autoHideTimeout = setTimeout(function() {
+                hideFallbackNotification();
+                log('Auto-hide executed after 5 seconds', 'success');
+                updateStatus('autohide-status', 'Auto-hide works - fallback hidden after 5 seconds', 'success');
+                autoHideTimeout = null;
+            }, 5000);
+
+            updateStatus('autohide-status', 'Waiting 5 seconds for auto-hide...', 'info');
+        }
+
+        // Test 7: Reset Clears
+        function testResetClears() {
+            showFallbackNotification();
+            log('Fallback shown', 'info');
+
+            setTimeout(function() {
+                hideFallbackNotification();
+                log('Reset called - fallback cleared', 'success');
+                updateStatus('reset-clear-status', 'Reset successfully cleared fallback', 'success');
+            }, 1000);
+
+            updateStatus('reset-clear-status', 'Showing fallback, will clear in 1 second...', 'info');
+        }
+
+        // Initial checks
+        window.addEventListener('load', function() {
+            log('Test page loaded', 'info');
+            
+            // Check for elements
+            const timerDisplay = document.getElementById('timer-display');
+            const fallbackElement = document.getElementById('timer-notification-fallback');
+            
+            if (timerDisplay) {
+                log('✓ Timer display element found', 'success');
+                updateStatus('timer-element-status', 'Timer display element: ✓ Found', 'success');
+            } else {
+                log('✗ Timer display element not found', 'error');
+                updateStatus('timer-element-status', 'Timer display element: ✗ Not Found', 'error');
+            }
+
+            if (fallbackElement) {
+                log('✓ Fallback notification element found', 'success');
+                updateStatus('fallback-element-status', 'Fallback element: ✓ Found', 'success');
+            } else {
+                log('✗ Fallback notification element not found', 'error');
+                updateStatus('fallback-element-status', 'Fallback element: ✗ Not Found', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+

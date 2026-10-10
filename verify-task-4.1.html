@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 4.1 Verification - FocusTimer Module</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #4a90e2;
+            margin-top: 0;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .summary {
+            font-weight: bold;
+            font-size: 18px;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .demo {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #timer-display {
+            font-size: 48px;
+            font-family: monospace;
+            color: #333;
+            margin: 20px 0;
+        }
+        .requirement {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task 4.1 Verification: FocusTimer Module with State Management</h1>
+    
+    <div class="section requirement">
+        <h3>Task Requirements</h3>
+        <ul>
+            <li>Implement timer state (remainingSeconds, isRunning, timerInterval)</li>
+            <li>Implement <code>init()</code> to initialize with 1500 seconds (25 minutes)</li>
+            <li>Implement <code>formatTime(seconds)</code> to convert seconds to MM:SS format</li>
+            <li>Implement <code>getRemainingTime()</code> to return current countdown value</li>
+            <li>Update DOM element <code>#timer-display</code> with formatted time</li>
+            <li><strong>Requirements: 3.1, 3.3</strong></li>
+        </ul>
+    </div>
+
+    <div class="section demo">
+        <h2>Live Timer Display</h2>
+        <div id="timer-display">Loading...</div>
+        <p><em>This display should show "25:00" after initialization</em></p>
+    </div>
+
+    <div class="section">
+        <h2>Automated Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <!-- Load the app.js file -->
+    <script src="js/app.js"></script>
+
+    <script>
+        // Test framework
+        const results = [];
+        let passed = 0;
+        let failed = 0;
+        
+        function test(description, testFn) {
+            try {
+                testFn();
+                results.push({ description, passed: true });
+                passed++;
+                console.log('✓', description);
+            } catch (error) {
+                results.push({ description, passed: false, error: error.message });
+                failed++;
+                console.error('✗', description, error);
+            }
+        }
+
+        function expect(value) {
+            return {
+                toBe(expected) {
+                    if (value !== expected) {
+                        throw new Error(`Expected ${expected}, but got ${value}`);
+                    }
+                },
+                toMatch(regex) {
+                    if (!regex.test(value)) {
+                        throw new Error(`Expected "${value}" to match ${regex}`);
+                    }
+                },
+                toBeGreaterThanOrEqual(expected) {
+                    if (value < expected) {
+                        throw new Error(`Expected ${value} to be >= ${expected}`);
+                    }
+                },
+                toBeType(expectedType) {
+                    if (typeof value !== expectedType) {
+                        throw new Error(`Expected type ${expectedType}, but got ${typeof value}`);
+                    }
+                }
+            };
+        }
+
+        // Run tests after a small delay to ensure DOM is ready
+        setTimeout(() => {
+            console.log('=== Running FocusTimer Module Tests ===\n');
+
+            // Test 1: Module exists
+            test('App.FocusTimer module exists', () => {
+                if (!App || !App.FocusTimer) {
+                    throw new Error('App.FocusTimer module not found');
+                }
+            });
+
+            // Test 2: Public API methods exist
+            test('FocusTimer has all required public methods', () => {
+                const requiredMethods = ['init', 'start', 'stop', 'reset', 'getRemainingTime', 'formatTime', 'destroy'];
+                requiredMethods.forEach(method => {
+                    if (typeof App.FocusTimer[method] !== 'function') {
+                        throw new Error(`Method ${method} is missing or not a function`);
+                    }
+                });
+            });
+
+            // Test 3: init() sets remainingSeconds to 1500
+            test('init() initializes with 1500 seconds (25 minutes)', () => {
+                App.FocusTimer.init();
+                expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+            });
+
+            // Test 4: getRemainingTime() returns a number
+            test('getRemainingTime() returns a number', () => {
+                const remaining = App.FocusTimer.getRemainingTime();
+                expect(remaining).toBeType('number');
+            });
+
+            // Test 5: getRemainingTime() returns non-negative value
+            test('getRemainingTime() returns non-negative value', () => {
+                expect(App.FocusTimer.getRemainingTime()).toBeGreaterThanOrEqual(0);
+            });
+
+            // Test 6: formatTime(1500) returns "25:00"
+            test('formatTime(1500) returns "25:00"', () => {
+                expect(App.FocusTimer.formatTime(1500)).toBe('25:00');
+            });
+
+            // Test 7: formatTime(0) returns "00:00"
+            test('formatTime(0) returns "00:00"', () => {
+                expect(App.FocusTimer.formatTime(0)).toBe('00:00');
+            });
+
+            // Test 8: formatTime handles various values
+            test('formatTime(61) returns "01:01"', () => {
+                expect(App.FocusTimer.formatTime(61)).toBe('01:01');
+            });
+
+            test('formatTime(599) returns "09:59"', () => {
+                expect(App.FocusTimer.formatTime(599)).toBe('09:59');
+            });
+
+            test('formatTime(3599) returns "59:59"', () => {
+                expect(App.FocusTimer.formatTime(3599)).toBe('59:59');
+            });
+
+            // Test 9: formatTime pads single digits
+            test('formatTime(5) pads with zeros: "00:05"', () => {
+                expect(App.FocusTimer.formatTime(5)).toBe('00:05');
+            });
+
+            test('formatTime(65) pads with zeros: "01:05"', () => {
+                expect(App.FocusTimer.formatTime(65)).toBe('01:05');
+            });
+
+            // Test 10: DOM element is updated
+            test('init() updates #timer-display element with "25:00"', () => {
+                App.FocusTimer.init();
+                const timerDisplay = document.getElementById('timer-display');
+                if (!timerDisplay) {
+                    throw new Error('#timer-display element not found');
+                }
+                expect(timerDisplay.textContent).toBe('25:00');
+            });
+
+            // Test 11: MM:SS format validation
+            test('Timer display matches MM:SS format pattern', () => {
+                App.FocusTimer.init();
+                const displayText = document.getElementById('timer-display').textContent;
+                expect(displayText).toMatch(/^\d{2}:\d{2}$/);
+            });
+
+            // Requirements validation
+            test('✓ Requirement 3.1: Timer initializes with 25 minutes (1500 seconds)', () => {
+                App.FocusTimer.init();
+                expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+            });
+
+            test('✓ Requirement 3.3: Timer displays time in MM:SS format', () => {
+                App.FocusTimer.init();
+                const displayText = document.getElementById('timer-display').textContent;
+                expect(displayText).toMatch(/^\d{2}:\d{2}$/);
+            });
+
+            // Display results
+            const testResultsDiv = document.getElementById('test-results');
+            
+            let html = '';
+            
+            results.forEach(result => {
+                const className = result.passed ? 'pass' : 'fail';
+                const icon = result.passed ? '✓' : '✗';
+                const errorMsg = result.error ? `<br><small>Error: ${result.error}</small>` : '';
+                html += `<div class="test-result ${className}">${icon} ${result.description}${errorMsg}</div>`;
+            });
+            
+            const summaryClass = failed === 0 ? 'pass' : 'fail';
+            html += `<div class="summary ${summaryClass}">`;
+            html += `<strong>Summary:</strong> ${results.length} tests total | `;
+            html += `<strong style="color: #28a745;">${passed} passed</strong> | `;
+            html += `<strong style="color: #dc3545;">${failed} failed</strong>`;
+            html += '</div>';
+            
+            if (failed === 0) {
+                html += '<div style="margin-top: 20px; padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px; border-left: 4px solid #28a745;">';
+                html += '<strong>✓ Task 4.1 Complete!</strong><br>';
+                html += 'All requirements have been successfully implemented and tested.';
+                html += '</div>';
+            }
+            
+            testResultsDiv.innerHTML = html;
+
+            console.log(`\n=== Test Summary ===`);
+            console.log(`Total: ${results.length}, Passed: ${passed}, Failed: ${failed}`);
+            
+            if (failed === 0) {
+                console.log('\n✓ Task 4.1 COMPLETE - All tests passed!');
+            } else {
+                console.log('\n✗ Some tests failed. Please review the errors above.');
+            }
+        }, 100);
+    </script>
+</body>
+</html>

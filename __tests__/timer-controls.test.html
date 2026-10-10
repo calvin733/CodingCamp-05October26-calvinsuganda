@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Controls Tests - Task 4.2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 20px; }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #ddd;
+            background: #f9f9f9;
+        }
+        .test-result.pass {
+            border-left-color: #4caf50;
+            background: #f1f8f4;
+        }
+        .test-result.fail {
+            border-left-color: #f44336;
+            background: #fef1f1;
+        }
+        .summary {
+            padding: 15px;
+            margin: 20px 0;
+            background: #e3f2fd;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .error-details {
+            color: #c62828;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>FocusTimer Control Methods Tests - Task 4.2</h1>
+    <div class="test-container">
+        <div id="test-results"></div>
+        <div id="test-summary" class="summary"></div>
+    </div>
+
+    <!-- Load the app.js file -->
+    <script src="../js/app.js"></script>
+
+    <script>
+        // Simple test framework
+        const results = [];
+        let currentSuite = '';
+
+        function describe(suiteName, fn) {
+            currentSuite = suiteName;
+            fn();
+        }
+
+        function test(testName, fn) {
+            try {
+                fn();
+                results.push({ suite: currentSuite, name: testName, pass: true });
+            } catch (error) {
+                results.push({ suite: currentSuite, name: testName, pass: false, error: error.message });
+            }
+        }
+
+        function expect(actual) {
+            return {
+                toBe(expected) {
+                    if (actual !== expected) {
+                        throw new Error(`Expected ${expected} but got ${actual}`);
+                    }
+                },
+                toBeLessThan(expected) {
+                    if (actual >= expected) {
+                        throw new Error(`Expected ${actual} to be less than ${expected}`);
+                    }
+                },
+                toBeGreaterThanOrEqual(expected) {
+                    if (actual < expected) {
+                        throw new Error(`Expected ${actual} to be >= ${expected}`);
+                    }
+                }
+            };
+        }
+
+        function beforeEach(fn) {
+            // Store for later use in tests
+            window._beforeEach = fn;
+        }
+
+        function afterEach(fn) {
+            // Store for later use in tests
+            window._afterEach = fn;
+        }
+
+        // Mock timer utilities
+        let mockTime = 0;
+        let mockIntervals = [];
+        let originalSetInterval = window.setInterval;
+        let originalClearInterval = window.clearInterval;
+
+        function useFakeTimers() {
+            mockTime = 0;
+            mockIntervals = [];
+            
+            window.setInterval = function(fn, delay) {
+                const id = mockIntervals.length;
+                mockIntervals.push({ fn, delay, active: true });
+                return id;
+            };
+            
+            window.clearInterval = function(id) {
+                if (mockIntervals[id]) {
+                    mockIntervals[id].active = false;
+                }
+            };
+        }
+
+        function advanceTimersByTime(ms) {
+            const ticks = ms / 1000;
+            for (let i = 0; i < ticks; i++) {
+                mockIntervals.forEach(interval => {
+                    if (interval.active && interval.delay === 1000) {
+                        interval.fn();
+                    }
+                });
+            }
+        }
+
+        function useRealTimers() {
+            window.setInterval = originalSetInterval;
+            window.clearInterval = originalClearInterval;
+        }
+
+        // Run tests
+        describe('FocusTimer Control Methods - Task 4.2', () => {
+            describe('start() method', () => {
+                test('start() should begin countdown from 1500 seconds', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(1000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1499);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('start() should decrement by 1 every second', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(5000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1495);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('start() should update display as time decrements', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(1000);
+                    const display = document.getElementById('timer-display');
+                    expect(display.textContent).toBe('24:59');
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    display.remove();
+                });
+
+                test('start() should resume from paused time', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(5000);
+                    App.FocusTimer.stop();
+                    const pausedTime = App.FocusTimer.getRemainingTime();
+                    expect(pausedTime).toBe(1495);
+                    App.FocusTimer.start();
+                    advanceTimersByTime(2000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1493);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+            });
+
+            describe('stop() method', () => {
+                test('stop() should pause countdown', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(3000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1497);
+                    App.FocusTimer.stop();
+                    advanceTimersByTime(5000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1497);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('stop() should keep current time value when paused', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(10000);
+                    const timeBeforeStop = App.FocusTimer.getRemainingTime();
+                    App.FocusTimer.stop();
+                    expect(App.FocusTimer.getRemainingTime()).toBe(timeBeforeStop);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+            });
+
+            describe('reset() method', () => {
+                test('reset() should return to 1500 seconds from any state', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(30000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1470);
+                    App.FocusTimer.reset();
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('reset() should stop running timer', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(5000);
+                    App.FocusTimer.reset();
+                    advanceTimersByTime(5000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('reset() should update display to 25:00', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(10000);
+                    App.FocusTimer.reset();
+                    const display = document.getElementById('timer-display');
+                    expect(display.textContent).toBe('25:00');
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    display.remove();
+                });
+            });
+
+            describe('Requirements Validation', () => {
+                test('Requirement 4.1: Start button begins countdown', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    const initialTime = App.FocusTimer.getRemainingTime();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(1000);
+                    expect(App.FocusTimer.getRemainingTime()).toBeLessThan(initialTime);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('Requirement 4.2: Stop button pauses at current time', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(7000);
+                    const timeAtStop = App.FocusTimer.getRemainingTime();
+                    App.FocusTimer.stop();
+                    advanceTimersByTime(5000);
+                    expect(App.FocusTimer.getRemainingTime()).toBe(timeAtStop);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+
+                test('Requirement 4.4: Reset button returns to 1500 seconds', () => {
+                    document.body.innerHTML += '<div id="timer-display">25:00</div>';
+                    useFakeTimers();
+                    App.FocusTimer.init();
+                    App.FocusTimer.start();
+                    advanceTimersByTime(15000);
+                    App.FocusTimer.reset();
+                    expect(App.FocusTimer.getRemainingTime()).toBe(1500);
+                    App.FocusTimer.destroy();
+                    useRealTimers();
+                    document.getElementById('timer-display').remove();
+                });
+            });
+        });
+
+        // Display results
+        function displayResults() {
+            const resultsDiv = document.getElementById('test-results');
+            const summaryDiv = document.getElementById('test-summary');
+            
+            let html = '';
+            let passed = 0;
+            let failed = 0;
+            
+            results.forEach(result => {
+                const className = result.pass ? 'pass' : 'fail';
+                html += `<div class="test-result ${className}">
+                    <strong>${result.pass ? '✓' : '✗'}</strong> ${result.suite} - ${result.name}
+                    ${result.error ? `<div class="error-details">${result.error}</div>` : ''}
+                </div>`;
+                
+                if (result.pass) passed++;
+                else failed++;
+            });
+            
+            resultsDiv.innerHTML = html;
+            summaryDiv.innerHTML = `Total: ${results.length} | Passed: ${passed} | Failed: ${failed}`;
+        }
+
+        // Run after a short delay to ensure everything is loaded
+        setTimeout(displayResults, 100);
+    </script>
+</body>
+</html>

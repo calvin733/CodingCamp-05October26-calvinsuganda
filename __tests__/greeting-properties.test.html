@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting Display Property-Based Tests</title>
+    <script src="https://cdn.jsdelivr.net/npm/fast-check@3.15.0/lib/bundle.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .test-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .test-result {
+            margin: 12px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .pass {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .fail {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .property-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .property-validates {
+            font-size: 14px;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 4px;
+        }
+        .property-details {
+            font-size: 14px;
+            margin-top: 8px;
+            color: #495057;
+        }
+        .stats {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .error-details {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Greeting Display Property-Based Tests</h1>
+    <p>Testing time formatting, date formatting, and time-based greeting properties using fast-check with 100+ iterations per property</p>
+    
+    <div class="test-controls">
+        <button onclick="runAllTests()">Run All Property Tests</button>
+        <button onclick="runTimeFormattingTest()">Run Time Formatting Test</button>
+        <button onclick="runDateFormattingTest()">Run Date Formatting Test</button>
+        <button onclick="runGreetingTest()">Run Greeting Test</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="stats" class="stats" style="display: none;">
+        <h3>Test Statistics</h3>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-pass" style="color: #28a745;">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-fail" style="color: #dc3545;">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let passCount = 0;
+        let failCount = 0;
+
+        function updateStats() {
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('stat-total').textContent = passCount + failCount;
+            document.getElementById('stat-pass').textContent = passCount;
+            document.getElementById('stat-fail').textContent = failCount;
+        }
+
+        function addResult(propertyName, validates, passed, message, errorDetails = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            
+            let html = `
+                <div class="property-header">
+                    ${passed ? '✓' : '✗'} ${propertyName}
+                </div>
+                <div class="property-validates">Validates: ${validates}</div>
+                <div class="property-details">${message}</div>
+            `;
+            
+            if (errorDetails) {
+                html += `<div class="error-details">${errorDetails}</div>`;
+            }
+            
+            resultDiv.innerHTML = html;
+            resultsDiv.appendChild(resultDiv);
+            
+            if (passed) {
+                passCount++;
+            } else {
+                failCount++;
+            }
+            updateStats();
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            passCount = 0;
+            failCount = 0;
+            document.getElementById('stats').style.display = 'none';
+        }
+
+        // ============================================
+        // Property Test Generators
+        // ============================================
+
+        // Generator for random Date objects
+        const dateGenerator = fc.date({
+            min: new Date('2000-01-01'),
+            max: new Date('2100-12-31')
+        });
+
+        // Generator for hours (0-23)
+        const hourGenerator = fc.integer({ min: 0, max: 23 });
+
+        // ============================================
+        // Property 1: Time Formatting
+        // ============================================
+
+        function testProperty1_TimeFormatting() {
+            const propertyName = "Property 1: Time Formatting";
+            const validates = "Requirements 1.1";
+            
+            try {
+                const result = fc.check(
+                    fc.property(dateGenerator, (date) => {
+                        const formatted = App.GreetingDisplay.formatTime(date);
+                        
+                        // Check format matches HH:MM pattern
+                        const timePattern = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+                        if (!timePattern.test(formatted)) {
+                            return false;
+                        }
+                        
+                        // Extract hours and minutes from the formatted string
+                        const [hoursStr, minutesStr] = formatted.split(':');
+                        const hours = parseInt(hoursStr, 10);
+                        const minutes = parseInt(minutesStr, 10);
+                        
+                        // Verify the values match the input date
+                        if (hours !== date.getHours() || minutes !== date.getMinutes()) {
+                            return false;
+                        }
+                        
+                        // Verify zero-padding is correct
+                        if (hoursStr.length !== 2 || minutesStr.length !== 2) {
+                            return false;
+                        }
+                        
+                        return true;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample date: ${result.counterexample}`;
+                    addResult(propertyName, validates, false, "Time formatting property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All dates formatted correctly as HH:MM with proper zero-padding.`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        // ============================================
+        // Property 2: Date Formatting
+        // ============================================
+
+        function testProperty2_DateFormatting() {
+            const propertyName = "Property 2: Date Formatting";
+            const validates = "Requirements 1.2";
+            
+            try {
+                const result = fc.check(
+                    fc.property(dateGenerator, (date) => {
+                        const formatted = App.GreetingDisplay.formatDate(date);
+                        
+                        // Define expected weekday and month names
+                        const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                      'July', 'August', 'September', 'October', 'November', 'December'];
+                        
+                        const expectedWeekday = weekdays[date.getDay()];
+                        const expectedMonth = months[date.getMonth()];
+                        const expectedDay = date.getDate();
+                        const expectedYear = date.getFullYear();
+                        
+                        // Check that formatted string contains expected components
+                        if (!formatted.includes(expectedWeekday)) {
+                            return false;
+                        }
+                        
+                        if (!formatted.includes(expectedMonth)) {
+                            return false;
+                        }
+                        
+                        if (!formatted.includes(expectedDay.toString())) {
+                            return false;
+                        }
+                        
+                        if (!formatted.includes(expectedYear.toString())) {
+                            return false;
+                        }
+                        
+                        // Check format pattern: "Weekday, Month Day, Year"
+                        const expectedFormat = `${expectedWeekday}, ${expectedMonth} ${expectedDay}, ${expectedYear}`;
+                        if (formatted !== expectedFormat) {
+                            return false;
+                        }
+                        
+                        return true;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample date: ${result.counterexample}`;
+                    addResult(propertyName, validates, false, "Date formatting property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All dates formatted correctly as "Weekday, Month Day, Year".`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        // ============================================
+        // Property 3: Time-Based Greeting
+        // ============================================
+
+        function testProperty3_TimeBasedGreeting() {
+            const propertyName = "Property 3: Time-Based Greeting";
+            const validates = "Requirements 2.1, 2.2, 2.3, 2.4";
+            
+            try {
+                const result = fc.check(
+                    fc.property(hourGenerator, (hour) => {
+                        // Create a date with specific hour for greeting testing
+                        const date = new Date(2024, 0, 1, hour, 0, 0, 0);
+                        const greeting = App.GreetingDisplay.getGreeting(date);
+                        
+                        // Define expected greeting based on hour
+                        let expectedGreeting;
+                        
+                        // Morning: 05:00-11:59
+                        if (hour >= 5 && hour < 12) {
+                            expectedGreeting = 'Good Morning';
+                        }
+                        // Afternoon: 12:00-16:59
+                        else if (hour >= 12 && hour < 17) {
+                            expectedGreeting = 'Good Afternoon';
+                        }
+                        // Evening: 17:00-20:59
+                        else if (hour >= 17 && hour < 21) {
+                            expectedGreeting = 'Good Evening';
+                        }
+                        // Night: 21:00-04:59
+                        else {
+                            expectedGreeting = 'Good Night';
+                        }
+                        
+                        // Check that the greeting matches expected value
+                        if (greeting !== expectedGreeting) {
+                            console.log(`Hour ${hour}: expected "${expectedGreeting}", got "${greeting}"`);
+                            return false;
+                        }
+                        
+                        // Check that greeting is one of the four valid values
+                        const validGreetings = ['Good Morning', 'Good Afternoon', 'Good Evening', 'Good Night'];
+                        if (!validGreetings.includes(greeting)) {
+                            return false;
+                        }
+                        
+                        return true;
+                    }),
+                    { numRuns: 100 }
+                );
+                
+                if (result.failed) {
+                    const errorMsg = `Failed after ${result.numRuns} runs. Counterexample hour: ${result.counterexample}`;
+                    addResult(propertyName, validates, false, "Time-based greeting property violated", errorMsg);
+                } else {
+                    addResult(propertyName, validates, true, `Passed with ${result.numRuns} runs. All hours mapped correctly to appropriate greetings.`);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        // Additional test: Verify all 24 hours are covered
+        function testProperty3_AllHoursCoverage() {
+            const propertyName = "Property 3 Supplement: Coverage of All Hours";
+            const validates = "Requirements 2.1, 2.2, 2.3, 2.4";
+            
+            try {
+                let allHoursCovered = true;
+                const greetingCounts = {
+                    'Good Morning': 0,
+                    'Good Afternoon': 0,
+                    'Good Evening': 0,
+                    'Good Night': 0
+                };
+                let errorMsg = '';
+
+                for (let hour = 0; hour < 24; hour++) {
+                    const date = new Date(2024, 0, 1, hour, 0, 0, 0);
+                    const greeting = App.GreetingDisplay.getGreeting(date);
+                    
+                    // Track greeting counts
+                    if (greetingCounts.hasOwnProperty(greeting)) {
+                        greetingCounts[greeting]++;
+                    } else {
+                        errorMsg = `Invalid greeting "${greeting}" for hour ${hour}`;
+                        allHoursCovered = false;
+                        break;
+                    }
+                    
+                    // Verify specific mappings
+                    if (hour >= 5 && hour < 12 && greeting !== 'Good Morning') {
+                        errorMsg = `Hour ${hour} should be "Good Morning", got "${greeting}"`;
+                        allHoursCovered = false;
+                        break;
+                    }
+                    if (hour >= 12 && hour < 17 && greeting !== 'Good Afternoon') {
+                        errorMsg = `Hour ${hour} should be "Good Afternoon", got "${greeting}"`;
+                        allHoursCovered = false;
+                        break;
+                    }
+                    if (hour >= 17 && hour < 21 && greeting !== 'Good Evening') {
+                        errorMsg = `Hour ${hour} should be "Good Evening", got "${greeting}"`;
+                        allHoursCovered = false;
+                        break;
+                    }
+                    if ((hour >= 21 || hour < 5) && greeting !== 'Good Night') {
+                        errorMsg = `Hour ${hour} should be "Good Night", got "${greeting}"`;
+                        allHoursCovered = false;
+                        break;
+                    }
+                }
+
+                if (allHoursCovered) {
+                    const distribution = `Morning=${greetingCounts['Good Morning']}, Afternoon=${greetingCounts['Good Afternoon']}, Evening=${greetingCounts['Good Evening']}, Night=${greetingCounts['Good Night']}`;
+                    addResult(propertyName, validates, true, `All 24 hours mapped correctly. Distribution: ${distribution}`);
+                } else {
+                    addResult(propertyName, validates, false, "Hour coverage test failed", errorMsg);
+                }
+            } catch (error) {
+                addResult(propertyName, validates, false, "Test threw an exception", error.toString());
+            }
+        }
+
+        // ============================================
+        // Test Runners
+        // ============================================
+
+        function runTimeFormattingTest() {
+            clearResults();
+            console.log('Running Time Formatting Property Test...');
+            testProperty1_TimeFormatting();
+        }
+
+        function runDateFormattingTest() {
+            clearResults();
+            console.log('Running Date Formatting Property Test...');
+            testProperty2_DateFormatting();
+        }
+
+        function runGreetingTest() {
+            clearResults();
+            console.log('Running Time-Based Greeting Property Tests...');
+            testProperty3_TimeBasedGreeting();
+            testProperty3_AllHoursCoverage();
+        }
+
+        function runAllTests() {
+            clearResults();
+            console.log('Running All Greeting Display Property Tests...');
+            
+            // Run Property 1: Time Formatting
+            testProperty1_TimeFormatting();
+            
+            // Run Property 2: Date Formatting
+            testProperty2_DateFormatting();
+            
+            // Run Property 3: Time-Based Greeting
+            testProperty3_TimeBasedGreeting();
+            testProperty3_AllHoursCoverage();
+            
+            console.log('All property tests completed.');
+        }
+
+        // Check if fast-check is loaded
+        if (typeof fc === 'undefined') {
+            document.body.innerHTML = '<h1 style="color: red;">Error: fast-check library failed to load. Please check your internet connection.</h1>';
+        }
+
+        // Check if App.GreetingDisplay is available
+        if (typeof App === 'undefined' || typeof App.GreetingDisplay === 'undefined') {
+            document.body.innerHTML += '<h1 style="color: red;">Error: App.GreetingDisplay module not found. Please ensure app.js is loaded correctly.</h1>';
+        }
+    </script>
+</body>
+</html>

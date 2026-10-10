@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Validation</title>
+</head>
+<body>
+    <h1>Validating Property Tests Setup</h1>
+    <div id="status">Checking...</div>
+    
+    <script src="../js/app.js"></script>
+    <script>
+        const statusDiv = document.getElementById('status');
+        
+        // Check 1: App is loaded
+        if (typeof App === 'undefined') {
+            statusDiv.innerHTML = '❌ App not loaded';
+        } else if (typeof App.Storage === 'undefined') {
+            statusDiv.innerHTML = '❌ App.Storage not available';
+        } else {
+            // Quick test
+            App.Storage.set('test', {id: '123', text: 'test'});
+            const retrieved = App.Storage.get('test');
+            
+            if (retrieved && retrieved.id === '123' && retrieved.text === 'test') {
+                statusDiv.innerHTML = '✅ Storage module working correctly!<br>' +
+                    '✅ Ready to run property-based tests.<br>' +
+                    '<a href="storage-properties.test.html">Click here to run tests</a>';
+            } else {
+                statusDiv.innerHTML = '❌ Storage round-trip failed';
+            }
+            
+            App.Storage.remove('test');
+        }
+    </script>
+</body>
+</html>
