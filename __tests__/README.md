@@ -32,7 +32,25 @@ Two variants:
 
 ## Running the Tests
 
-### Browser-Based Tests (Recommended)
+### Jest Tests (Recommended)
+
+Run from the repository root:
+
+```bash
+npm test -- --runInBand
+```
+
+To run just the storage properties and error-handling checks:
+
+```bash
+npm test -- --runInBand --runTestsByPath __tests__/storage-properties.test.js
+```
+
+Jest loads the actual browser application through `test-utils/setup.js` and uses jsdom and fake timers. Storage round-trip properties use fast-check with 100 runs each. The suite also checks corrupt data, quota/security errors, availability probes, and preservation of unrelated storage. Greeting formatting properties exercise the actual module in `tests/properties/time-formatting.test.js`; greeting DOM updates are checked in `__tests__/greeting-properties.test.js`.
+
+The full checkpoint 5 validation completed with 8 suites and 112 tests passing. This verifies the implemented core modules; task creation, editing, rendering, and quick links are still pending in the Kiro checklist.
+
+### Browser-Based Tests (Optional)
 
 1. Open `storage-properties.test.html` in a modern web browser (Chrome, Firefox, Edge, Safari)
 2. Click "Run All Property Tests" button
@@ -46,27 +64,19 @@ The browser-based tests use the fast-check library loaded via CDN and run 100 it
 - Test statistics (total, passed, failed)
 - Ability to run specific test groups (tasks only, links only)
 
-### Node.js Tests (Alternative)
-
-If Node.js is available:
-
-```bash
-node __tests__/storage-properties.test.js
-```
-
-This runs the same tests using a simple mock implementation of the property-based testing framework.
+The legacy browser runners are separate from the verified Jest workflow and were not part of checkpoint 5 validation. The JavaScript test files now run under Jest rather than directly with `node`.
 
 ## Test Configuration
 
 - **Iterations per property**: 100 (minimum as specified in design document)
 - **Test framework**: fast-check (property-based testing)
-- **Storage keys tested**: `dashboard_tasks`, `dashboard_links`, and generic test keys
+- **Storage keys tested**: `dashboard_tasks`, `dashboard_links`, and `dashboard_timer_state`
 
 ## Data Generators
 
 The tests use generators for:
-- **Task objects**: Random id, text (1-500 chars), completed (boolean), createdAt (timestamp)
-- **Link objects**: Random id, name (1-50 chars), url (valid web URL), createdAt (timestamp)
+- **Task objects**: Random id, Unicode text (0-500 chars), completed (boolean), createdAt (timestamp)
+- **Link objects**: Random id, Unicode name (0-50 chars), url (valid web URL), createdAt (timestamp)
 - **Arrays**: Random length (0-50 items) of tasks or links
 
 ## Expected Results

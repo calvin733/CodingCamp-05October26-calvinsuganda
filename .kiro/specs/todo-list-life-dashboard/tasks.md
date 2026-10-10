@@ -54,7 +54,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - **Property 3: Time-Based Greeting**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
 
-- [ ] 4. Implement Focus Timer Component
+- [x] 4. Implement Focus Timer Component
   - [x] 4.1 Create FocusTimer module with state management
     - Implement timer state (remainingSeconds, isRunning, timerInterval)
     - Implement `init()` to initialize with 1500 seconds (25 minutes)
@@ -88,7 +88,7 @@ This implementation plan breaks down the Todo List Life Dashboard into discrete 
     - **Property 6: Timer Reset**
     - **Validates: Requirements 4.4, 4.5**
 
-- [~] 5. Checkpoint - Verify core modules
+- [x] 5. Checkpoint - Verify core modules
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement Todo Manager Component - Core Structure

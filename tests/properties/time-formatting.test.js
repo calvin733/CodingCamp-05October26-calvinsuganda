@@ -9,64 +9,18 @@
 
 const fc = require('fast-check');
 
-// ============================================
-// Greeting Display Module (imported/mocked)
-// ============================================
-
-/**
- * Format time as HH:MM
- * @param {Date} date - The date object to format
- * @returns {string} Time formatted as HH:MM
- */
+// Exercise production formatters and control the clock used by getGreeting().
 function formatTime(date) {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    return App.GreetingDisplay.formatTime(date);
 }
 
-/**
- * Format date in readable format
- * @param {Date} date - The date object to format
- * @returns {string} Date formatted as "Weekday, Month Day, Year"
- */
 function formatDate(date) {
-    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                  'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    const weekday = weekdays[date.getDay()];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-    
-    return `${weekday}, ${month} ${day}, ${year}`;
+    return App.GreetingDisplay.formatDate(date);
 }
 
-/**
- * Get appropriate greeting based on time (without parameters for Node environment)
- * Note: In actual app.js, getGreeting uses current time. For testing, we use a helper.
- * @param {Date} date - The date object to use for determining greeting
- * @returns {string} Time-based greeting
- */
 function getGreetingForDate(date) {
-    const hours = date.getHours();
-    
-    // Morning: 05:00-11:59
-    if (hours >= 5 && hours < 12) {
-        return 'Good Morning';
-    }
-    // Afternoon: 12:00-16:59
-    else if (hours >= 12 && hours < 17) {
-        return 'Good Afternoon';
-    }
-    // Evening: 17:00-20:59
-    else if (hours >= 17 && hours < 21) {
-        return 'Good Evening';
-    }
-    // Night: 21:00-04:59
-    else {
-        return 'Good Night';
-    }
+    jest.setSystemTime(date);
+    return App.GreetingDisplay.getGreeting();
 }
 
 // ============================================
@@ -248,6 +202,6 @@ describe('Property 3: Time-Based Greeting', () => {
         expect(greetingMap['Good Evening']).toEqual([17, 18, 19, 20]);
 
         // Verify night period (21-4)
-        expect(greetingMap['Good Night']).toEqual([21, 22, 23, 0, 1, 2, 3, 4]);
+        expect(greetingMap['Good Night']).toEqual([0, 1, 2, 3, 4, 21, 22, 23]);
     });
 });

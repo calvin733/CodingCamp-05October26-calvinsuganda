@@ -29,8 +29,7 @@ class LocalStorageMock {
 
 global.localStorage = new LocalStorageMock();
 
-// Load the app
-require('../js/app.js');
+// The shared Jest setup loads the browser application's App API.
 
 describe('TodoManager - Core Module (Task 6.1)', function() {
     

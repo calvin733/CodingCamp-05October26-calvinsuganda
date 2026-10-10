@@ -412,8 +412,8 @@ const App = (function() {
          * Validates: Requirements 4.1, 4.3, 3.4
          */
         function start() {
-            // Only start if not already running
-            if (!isRunning) {
+            // A completed session must be reset before starting another countdown.
+            if (!isRunning && remainingSeconds > 0) {
                 isRunning = true;
                 hasNotified = false; // Reset notification flag when starting new session
                 
